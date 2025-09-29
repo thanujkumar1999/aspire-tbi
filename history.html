@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Booking History</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+    body { margin: 0; background: #f4f9ff; color: #333; }
+    .header { background: #004080; color: white; padding: 16px; font-size: 20px; text-align: center; }
+    .tabs { display: flex; justify-content: space-around; background: #e0ecf8; }
+    .tab { flex: 1; padding: 12px; text-align: center; cursor: pointer; font-weight: bold; border-bottom: 3px solid transparent; }
+    .tab.active { background: #fff; border-bottom: 3px solid #004080; }
+    .content { padding: 15px; }
+    .booking-card { background: #fff; margin-bottom: 10px; border-radius: 10px; padding: 15px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+    .booking-card h4 { margin: 0 0 5px; color: #004080; }
+    .booking-card p { margin: 4px 0; font-size: 14px; }
+    .empty { text-align: center; margin-top: 20px; color: #888; }
+  </style>
+</head>
+<body>
+  <div class="header">Booking History</div>
+  <div class="tabs">
+    <div class="tab" id="tabInstrument">Instrument</div>
+    <div class="tab" id="tabConference">Conference</div>
+  </div>
+  <div class="content" id="instrumentTab"></div>
+  <div class="content" id="conferenceTab" style="display: none;"></div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
+    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAlZZ79I_UCaTwV4KHo67Rauv99epa_VHc",
+      authDomain: "aspire-tbi.firebaseapp.com",
+      projectId: "aspire-tbi",
+      storageBucket: "aspire-tbi.appspot.com",
+      messagingSenderId: "9906395381",
+      appId: "1:9906395381:web:546de5f0f6234703144dbc"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // Tab elements
+    const tabInstrument = document.getElementById("tabInstrument");
+    const tabConference = document.getElementById("tabConference");
+    const instrumentTab = document.getElementById("instrumentTab");
+    const conferenceTab = document.getElementById("conferenceTab");
+
+    function activateTab(tabName) {
+      if (tabName === "instrument") {
+        tabInstrument.classList.add("active");
+        tabConference.classList.remove("active");
+        instrumentTab.style.display = "block";
+        conferenceTab.style.display = "none";
+      } else {
+        tabConference.classList.add("active");
+        tabInstrument.classList.remove("active");
+        conferenceTab.style.display = "block";
+        instrumentTab.style.display = "none";
+      }
+    }
+
+    tabInstrument.addEventListener("click", () => {
+      activateTab("instrument");
+    });
+    tabConference.addEventListener("click", () => {
+      activateTab("conference");
+    });
+
+    function createBookingCard(type, data) {
+      const card = document.createElement("div");
+      card.classList.add("booking-card");
+      const title = (type === "instrument") ? (data.instrument || "Instrument") : (data.room || "Conference");
+      let html = `<h4>${title}</h4>`;
+      html += `<p><strong>Date:</strong> ${data.date || "-"}</p>`;
+      html += `<p><strong>Time:</strong> ${data.slot || "-"}</p>`;
+      html += `<p><strong>Purpose:</strong> ${data.purpose || "-"}</p>`;
+      html += `<p><strong>Booking ID:</strong> ${data.bookingId || "-"}</p>`;
+      card.innerHTML = html;
+      return card;
+    }
+
+    async function loadHistory() {
+      // Instrument bookings
+      const instrDocs = await getDocs(collection(db, "bookings"));
+      if (instrDocs.empty) {
+        instrumentTab.innerHTML = `<div class="empty">No instrument bookings found.</div>`;
+      } else {
+        instrumentTab.innerHTML = "";
+        instrDocs.forEach(doc => {
+          instrumentTab.appendChild(createBookingCard("instrument", doc.data()));
+        });
+      }
+
+      // Conference bookings
+      const confDocs = await getDocs(collection(db, "conference_bookings"));
+      if (confDocs.empty) {
+        conferenceTab.innerHTML = `<div class="empty">No conference bookings found.</div>`;
+      } else {
+        conferenceTab.innerHTML = "";
+        confDocs.forEach(doc => {
+          conferenceTab.appendChild(createBookingCard("conference", doc.data()));
+        });
+      }
+    }
+
+    // On load
+    activateTab("instrument");
+    loadHistory();
+  </script>
+</body>
+</html>

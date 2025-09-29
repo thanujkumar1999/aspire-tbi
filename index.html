@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Home - Aspire-TBI</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: #f4f4f4;
+      color: #333;
+    }
+
+    .header {
+      background: #004080;
+      color: white;
+      padding: 15px 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    .grid-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 15px;
+      padding: 20px;
+      padding-bottom: 80px; /* ensure space above bottom nav */
+    }
+
+    .card {
+      background: white;
+      padding: 25px 10px;
+      border-radius: 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      text-align: center;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .card:hover {
+      transform: scale(1.04);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    }
+
+    .card i {
+      font-size: 28px;
+      margin-bottom: 10px;
+      color: #004080;
+    }
+
+    .card span {
+      display: block;
+      font-size: 15px;
+      font-weight: 500;
+    }
+
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #004080;
+      display: flex;
+      justify-content: space-around;
+      padding: 10px 0;
+      z-index: 999;
+    }
+
+    .bottom-nav a {
+      color: white;
+      text-decoration: none;
+      font-size: 13px;
+      text-align: center;
+      flex: 1;
+    }
+
+    .bottom-nav a i {
+      font-size: 20px;
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    @media (max-width: 480px) {
+      .card {
+        padding: 20px 5px;
+      }
+
+      .card i {
+        font-size: 24px;
+      }
+
+      .card span {
+        font-size: 14px;
+      }
+
+      .bottom-nav a {
+        font-size: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">ASPIRE-TBI</div>
+
+  <div class="grid-container">
+    <div class="card" onclick="location.href='instrumentbooking.html'">
+      <i class="fas fa-microscope"></i>
+      <span>Instrument Booking</span>
+    </div>
+    <div class="card" onclick="location.href='confroombooking.html'">
+      <i class="fas fa-door-open"></i>
+      <span>Conference Room Booking</span>
+    </div>
+    <div class="card" onclick="location.href='dashboard.html'">
+      <i class="fas fa-id-card"></i>
+      <span>My Dashboard</span>
+    </div>
+    <div class="card" onclick="location.href='hackathon.html'">
+      <i class="fas fa-laptop-code"></i>
+      <span>Hackathon</span>
+    </div>
+    <div class="card" onclick="location.href='internships.html'">
+      <i class="fas fa-briefcase"></i>
+      <span>Internships</span>
+    </div>
+    <div class="card" onclick="location.href='history.html'">
+      <i class="fas fa-history"></i>
+      <span>History</span>
+    </div>
+    <div class="card" onclick="location.href='help.html'">
+      <i class="fas fa-question-circle"></i>
+      <span>Help</span>
+    </div>
+  </div>
+
+  <div class="bottom-nav">
+    <a href="index.html">
+      <i class="fas fa-home"></i>
+      <span>Home</span>
+    </a>
+    <a href="chat.html">
+      <i class="fas fa-comments"></i>
+      <span>Chat</span>
+    </a>
+    <a href="#" onclick="logout()">
+      <i class="fas fa-sign-out-alt"></i>
+      <span>Logout</span>
+    </a>
+  </div>
+
+  <script>
+    const user = JSON.parse(localStorage.getItem("user"));
+    if (!user) {
+      window.location.href = "login.html";
+    }
+
+    function logout() {
+      localStorage.removeItem("user");
+      window.location.href = "login.html";
+    }
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>User Dashboard</title>
+  <style>
+    /* Reset some default */
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      padding: 20px;
+      background: #f0f4f8;
+      color: #333;
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .container {
+      max-width: 700px;
+      width: 100%;
+      background: white;
+      border-radius: 12px;
+      padding: 30px 40px;
+      box-shadow: 0 4px 15px rgb(0 0 0 / 0.1);
+      display: flex;
+      flex-direction: column;
+      gap: 25px;
+    }
+    .profile {
+      text-align: center;
+      border-bottom: 1px solid #e1e8ed;
+      padding-bottom: 20px;
+    }
+    .profile img {
+      border-radius: 50%;
+      width: 110px;
+      height: 110px;
+      object-fit: cover;
+      margin-bottom: 15px;
+      border: 3px solid #2196f3;
+      background: #e3f2fd;
+    }
+    .profile h2 {
+      margin: 0;
+      font-weight: 700;
+      font-size: 1.8rem;
+      color: #0d47a1;
+    }
+    .profile p {
+      margin: 5px 0 0 0;
+      font-weight: 500;
+      color: #555;
+      font-size: 0.9rem;
+    }
+    .bookings {
+      flex-grow: 1;
+      overflow-y: auto;
+      max-height: 450px;
+    }
+    .bookings h3 {
+      margin: 0 0 10px 0;
+      color: #0d47a1;
+      font-weight: 700;
+      font-size: 1.3rem;
+    }
+    .booking {
+      background: #fafafa;
+      border-left: 6px solid #2196f3;
+      padding: 18px 20px;
+      margin-bottom: 15px;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgb(0 0 0 / 0.08);
+      transition: background 0.2s ease;
+      font-size: 0.95rem;
+      line-height: 1.4;
+    }
+    .booking:hover {
+      background: #e3f2fd;
+    }
+    .booking.conference {
+      border-color: #673ab7;
+    }
+    .booking strong {
+      display: inline-block;
+      width: 110px;
+      font-weight: 600;
+      color: #0d47a1;
+    }
+    #logoutBtn {
+      margin: 0 auto;
+      padding: 12px 30px;
+      background: #f44336;
+      color: white;
+      border: none;
+      border-radius: 30px;
+      font-size: 16px;
+      cursor: pointer;
+      font-weight: 700;
+      box-shadow: 0 4px 12px rgb(244 67 54 / 0.5);
+      transition: background 0.3s ease;
+      max-width: 200px;
+    }
+    #logoutBtn:hover {
+      background: #d32f2f;
+    }
+
+    /* Loading spinner */
+    .spinner {
+      border: 5px solid #f3f3f3;
+      border-top: 5px solid #2196f3;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 40px auto;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg);}
+      100% { transform: rotate(360deg);}
+    }
+
+    /* Responsive */
+    @media (max-width: 600px) {
+      .container {
+        padding: 20px 25px;
+      }
+      .booking strong {
+        width: 90px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="profile" id="profileSection">
+      <img src="https://i.imgur.com/9g7H4g1.png" alt="User Avatar" />
+      <h2 id="welcomeMsg">Welcome</h2>
+      <p id="currentTime"></p>
+    </div>
+
+    <div class="bookings">
+      <h3>Your Bookings:</h3>
+      <div id="bookingList">
+        <div class="spinner" aria-label="Loading bookings"></div>
+      </div>
+    </div>
+
+    <button id="logoutBtn" aria-label="Logout from dashboard">Logout</button>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
+    import {
+      getDatabase,
+      ref,
+      get
+    } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";
+    import {
+      getFirestore,
+      collection,
+      query,
+      where,
+      getDocs
+    } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAlZZ79I_UCaTwV4KHo67Rauv99epa_VHc",
+      authDomain: "aspire-tbi.firebaseapp.com",
+      projectId: "aspire-tbi",
+      databaseURL: "https://aspire-tbi-default-rtdb.firebaseio.com",
+      storageBucket: "aspire-tbi.appspot.com",
+      messagingSenderId: "9906395381",
+      appId: "1:9906395381:web:546de5f0f6234703144dbc"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const firestore = getFirestore(app);
+
+    const profileSection = document.getElementById("profileSection");
+    const bookingList = document.getElementById("bookingList");
+    const welcomeMsg = document.getElementById("welcomeMsg");
+    const currentTime = document.getElementById("currentTime");
+    const logoutBtn = document.getElementById("logoutBtn");
+
+    // Get user from localStorage (replace this logic with your own if needed)
+    const user = JSON.parse(localStorage.getItem("user"));
+
+    if (!user) {
+      window.location.href = "login.html";
+    } else {
+      welcomeMsg.textContent = `Welcome, ${user.name || user.username}`;
+      if (user.email) {
+        // Show email below welcome if available
+        let emailEl = profileSection.querySelector('p');
+        emailEl.textContent = user.email;
+      }
+      if (user.avatarUrl) {
+        profileSection.querySelector('img').src = user.avatarUrl;
+      }
+      updateTime();
+      loadBookings(user.username);
+    }
+
+    // Update current date/time every minute
+    function updateTime() {
+      const now = new Date();
+      const options = { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute:'2-digit' };
+      currentTime.textContent = now.toLocaleDateString(undefined, options);
+      setTimeout(updateTime, 60000);
+    }
+
+    async function loadBookings(username) {
+      bookingList.innerHTML = '<div class="spinner" aria-label="Loading bookings"></div>';
+      try {
+        // Conference bookings
+        const conferenceQuery = query(
+          collection(firestore, "conference_bookings"),
+          where("employee", "==", username)
+        );
+        const conferenceSnap = await getDocs(conferenceQuery);
+
+        // Instrument bookings
+        const instrumentQuery = query(
+          collection(firestore, "bookings"),
+          where("employee", "==", username)
+        );
+        const instrumentSnap = await getDocs(instrumentQuery);
+
+        bookingList.innerHTML = "";
+
+        if (conferenceSnap.empty && instrumentSnap.empty) {
+          bookingList.innerHTML = "<p>No bookings found.</p>";
+          return;
+        }
+
+        conferenceSnap.forEach(doc => {
+          const data = doc.data();
+          bookingList.innerHTML += `
+            <div class="booking conference" tabindex="0" aria-label="Conference Room booking on ${data.date}, slot ${data.slot}">
+              <strong>Conference Room:</strong> ${escapeHTML(data.room)}<br/>
+              <strong>Date:</strong> ${escapeHTML(data.date)}<br/>
+              <strong>Slot:</strong> ${escapeHTML(data.slot)}<br/>
+              <strong>Purpose:</strong> ${escapeHTML(data.purpose)}<br/>
+              <strong>Booking ID:</strong> ${escapeHTML(data.bookingId || doc.id)}
+            </div>
+          `;
+        });
+
+        instrumentSnap.forEach(doc => {
+          const data = doc.data();
+          bookingList.innerHTML += `
+            <div class="booking" tabindex="0" aria-label="Instrument booking for ${data.instrument} on ${data.date}, slot ${data.slot}">
+              <strong>Instrument:</strong> ${escapeHTML(data.instrument)}<br/>
+              <strong>Date:</strong> ${escapeHTML(data.date)}<br/>
+              <strong>Slot:</strong> ${escapeHTML(data.slot)}<br/>
+              <strong>Purpose:</strong> ${escapeHTML(data.purpose)}<br/>
+              <strong>Booking ID:</strong> ${escapeHTML(data.bookingId || doc.id)}
+            </div>
+          `;
+        });
+      } catch (err) {
+        bookingList.innerHTML = `<p style="color:red;">Error fetching bookings: ${escapeHTML(err.message)}</p>`;
+        console.error(err);
+      }
+    }
+
+    logoutBtn.addEventListener('click', () => {
+      const confirmLogout = confirm("Are you sure you want to logout?");
+      if (confirmLogout) {
+        localStorage.removeItem("user");
+        window.location.href = "login.html";
+      }
+    });
+
+    // Helper to escape text to prevent XSS
+    function escapeHTML(str) {
+      if (!str) return "";
+      return str.replace(/[&<>"']/g, function(match) {
+        const escape = {
+          '&': '&amp;',
+          '<': '&lt;',
+          '>': '&gt;',
+          '"': '&quot;',
+          "'": '&#39;'
+        };
+        return escape[match];
+      });
+    }
+  </script>
+</body>
+</html>
