@@ -58,7 +58,13 @@
     </div>
 
     <div class="form-group">
-      <input type="date" id="date" required />
+      <label>Start Date:</label>
+      <input type="date" id="startDate" required />
+    </div>
+
+    <div class="form-group">
+      <label>End Date (max 2 days):</label>
+      <input type="date" id="endDate" required />
     </div>
 
     <div class="form-group">
@@ -109,8 +115,6 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    const bookings = []; // local booking cache
-
     const timeSlots = [
       "09:00 AM - 10:00 AM",
       "10:00 AM - 11:00 AM",
@@ -122,15 +126,19 @@
       "custom"
     ];
 
-    const dateInput = document.getElementById("date");
+    const startDateInput = document.getElementById("startDate");
+    const endDateInput = document.getElementById("endDate");
     const slotSelect = document.getElementById("slot");
     const customTimeContainer = document.getElementById("customTimeContainer");
 
     const today = new Date();
     const maxDate = new Date();
-    maxDate.setDate(today.getDate() + 3);
-    dateInput.min = today.toISOString().split('T')[0];
-    dateInput.max = maxDate.toISOString().split('T')[0];
+    maxDate.setDate(today.getDate() + 7);
+
+    startDateInput.min = today.toISOString().split('T')[0];
+    startDateInput.max = maxDate.toISOString().split('T')[0];
+    endDateInput.min = today.toISOString().split('T')[0];
+    endDateInput.max = maxDate.toISOString().split('T')[0];
 
     function toggleCustomTime(value) {
       customTimeContainer.style.display = value === "custom" ? "block" : "none";
@@ -138,38 +146,18 @@
 
     function updateSlotOptions() {
       slotSelect.innerHTML = '<option value="">-- Select Slot --</option>';
-      const selectedDate = new Date(dateInput.value);
-      const now = new Date();
-
-      const availableSlots = timeSlots.filter(slot => {
-        if (slot === "custom") return true;
-        if (selectedDate.toDateString() !== now.toDateString()) return true;
-
-        // parse slot hour & AM/PM
-        const hourString = slot.split(":")[0];
-        const hour = parseInt(hourString);
-        const isPM = slot.includes("PM");
-        let slotHour24 = hour % 12 + (isPM ? 12 : 0);
-
-        const slotStart = new Date(selectedDate);
-        slotStart.setHours(slotHour24, 0, 0, 0);
-
-        return slotStart > now;
-      });
-
-      availableSlots.forEach(slot => {
+      timeSlots.forEach(slot => {
         const option = document.createElement("option");
         option.value = slot;
         option.textContent = slot;
         slotSelect.appendChild(option);
       });
-
-      toggleCustomTime(""); // hide custom time by default
+      toggleCustomTime("");
     }
 
-    function generateBookingId(inst) {
+    function generateBookingId(inst, date) {
       const timestamp = new Date().toISOString().replace(/[-:T.]/g, '').slice(0, 14);
-      return `BK_${inst}_${timestamp}`;
+      return `BK_${inst}_${date}_${timestamp}`;
     }
 
     async function bookInstrument() {
@@ -177,10 +165,12 @@
       const name = document.getElementById("name").value.trim();
       const username = document.getElementById("username").value.trim();
       const number = document.getElementById("number").value.trim();
-      const date = document.getElementById("date").value;
+      const purpose = document.getElementById("purpose").value;
       let slot = document.getElementById("slot").value;
       const customTime = document.getElementById("customTime").value.trim();
-      const purpose = document.getElementById("purpose").value;
+
+      const startDate = new Date(startDateInput.value);
+      const endDate = new Date(endDateInput.value);
 
       if (slot === "custom") {
         if (!customTime) {
@@ -190,51 +180,55 @@
         slot = customTime;
       }
 
-      if (!instrument || !name || !number || !date || !slot || !purpose) {
+      if (!instrument || !name || !username || !number || !slot || !purpose || isNaN(startDate) || isNaN(endDate)) {
         alert("Please fill all fields.");
         return;
       }
 
-      const isAlreadyBooked = bookings.some(b => b.instrument === instrument && b.date === date && b.slot === slot);
-      if (isAlreadyBooked) {
-        alert("This instrument is already booked for the selected time.");
+      const diffDays = Math.floor((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
+
+      if (diffDays < 1 || diffDays > 2) {
+        alert("You can only book up to 2 days.");
         return;
       }
 
-      const bookingId = generateBookingId(instrument);
-      document.getElementById("bookingIdDisplay").innerText = `Booking ID: ${bookingId}`;
+      const bookingIds = [];
 
-      bookings.push({ instrument, name, number, date, slot, purpose, bookingId });
+      for (let i = 0; i < diffDays; i++) {
+        const bookingDate = new Date(startDate);
+        bookingDate.setDate(startDate.getDate() + i);
+        const formattedDate = bookingDate.toISOString().split('T')[0];
+        const bookingId = generateBookingId(instrument, formattedDate);
+        bookingIds.push(bookingId);
 
-      try {
-        await addDoc(collection(db, "bookings"), {
-          instrument,
-          name,
-          username,
-          number,
-          date,
-          slot,
-          purpose,
-          bookingId,
-          timestamp: serverTimestamp()
-        });
-        alert("Booking saved to Firebase!");
-      } catch (error) {
-        console.error("Error saving to Firestore:", error);
-        alert("Failed to save booking.");
+        try {
+          await addDoc(collection(db, "bookings"), {
+            instrument,
+            name,
+            username,
+            number,
+            date: formattedDate,
+            slot,
+            purpose,
+            bookingId,
+            timestamp: serverTimestamp()
+          });
+        } catch (error) {
+          console.error("Error saving booking:", error);
+          alert("Failed to save booking for " + formattedDate);
+        }
       }
+
+      document.getElementById("bookingIdDisplay").innerText = `Booking Successful. IDs: ${bookingIds.join(", ")}`;
+      // alert("Booking(s) saved to Firebase!");
     }
 
-    // Event listeners
-    dateInput.addEventListener("change", updateSlotOptions);
+    startDateInput.addEventListener("change", updateSlotOptions);
+    endDateInput.addEventListener("change", updateSlotOptions);
     slotSelect.addEventListener("change", (e) => toggleCustomTime(e.target.value));
     document.getElementById("bookBtn").addEventListener("click", bookInstrument);
 
-    // Initialize slots for today by default if date selected
-    if (dateInput.value) updateSlotOptions();
-
-    // Expose bookInstrument globally if needed
-    window.bookInstrument = bookInstrument;
+    updateSlotOptions();
   </script>
 </body>
 </html>
