@@ -3,25 +3,25 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Internship Application - Aspire-TBI</title>
+  <title>Post Internship - Aspire-TBI</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
   <style>
     * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
     body { margin: 0; padding: 0; background: #e6f0ff; color: #333; }
     .app-container {
-      max-width: 700px;
+      max-width: 650px;
       margin: 40px auto;
       background: #fff;
-      padding: 40px 30px;
+      padding: 35px 30px;
       border-radius: 15px;
       box-shadow: 0 12px 28px rgba(0,0,0,0.12);
       border-top: 6px solid #004080;
     }
     h2 {
       text-align: center;
-      margin-bottom: 35px;
+      margin-bottom: 30px;
       color: #004080;
-      font-size: 2.2rem;
+      font-size: 2rem;
       font-weight: bold;
     }
     .form-group { margin-bottom: 20px; }
@@ -30,49 +30,32 @@
       margin-bottom: 8px;
       font-weight: 600;
       color: #004080;
-      font-size: 1rem;
     }
     input, textarea, select {
       width: 100%;
-      padding: 14px 16px;
-      border-radius: 12px;
+      padding: 14px;
+      border-radius: 10px;
       border: 1px solid #ccc;
       font-size: 16px;
-      transition: all 0.2s ease;
       box-shadow: inset 0 2px 6px rgba(0,0,0,0.05);
     }
+    textarea { min-height: 90px; resize: vertical; }
     input:focus, textarea:focus, select:focus {
       border-color: #004080;
       box-shadow: 0 0 6px rgba(0,64,128,0.2);
       outline: none;
     }
-    textarea { min-height: 90px; resize: vertical; }
-    .file-label {
-      display: inline-block;
-      padding: 12px;
-      border-radius: 10px;
-      background: #f0f4f8;
-      cursor: pointer;
-      border: 1px dashed #004080;
-      text-align: center;
-      font-weight: 500;
-      transition: all 0.2s ease;
-      width: 100%;
-    }
-    .file-label:hover { background: #e0e8f0; }
-    #fileName { margin-top: 5px; font-size: 14px; color: #555; text-align: center; }
     button {
       width: 100%;
-      padding: 16px;
+      padding: 14px;
       background: #004080;
       color: #fff;
       border: none;
-      border-radius: 12px;
+      border-radius: 10px;
       font-size: 16px;
       font-weight: 600;
       cursor: pointer;
-      margin-top: 15px;
-      transition: all 0.2s ease;
+      margin-top: 10px;
     }
     button:hover { background: #002a60; }
     #submissionMsg {
@@ -82,63 +65,66 @@
       color: green;
       font-size: 16px;
     }
-    @media (max-width: 480px) {
-      .app-container { padding: 30px 20px; }
-      h2 { font-size: 1.8rem; }
-      button { font-size: 15px; }
-    }
   </style>
 </head>
 <body>
 
 <div class="app-container">
-  <h2><i class="fas fa-briefcase"></i> Internship Application</h2>
+  <h2><i class="fas fa-building"></i>Internship Opportunity</h2>
 
   <div class="form-group">
-    <label for="name">Full Name</label>
-    <input type="text" id="name" placeholder="Your full name" required/>
+    <label for="startupName">Startup Name</label>
+    <input type="text" id="startupName" placeholder="Your startup's name" required />
   </div>
 
   <div class="form-group">
-    <label for="contact">Contact Number</label>
-    <input type="tel" id="contact" placeholder="Your contact number" required/>
+    <label for="position">Position Available</label>
+    <input type="text" id="position" placeholder="e.g., Web Developer Intern" required />
   </div>
 
   <div class="form-group">
-    <label for="address">Address</label>
-    <textarea id="address" placeholder="Your current address" required></textarea>
+    <label for="domain">Domain Details</label>
+    <textarea id="domain" placeholder="Brief about the domain/project" required></textarea>
   </div>
 
   <div class="form-group">
-    <label for="skills">Skills</label>
-    <textarea id="skills" placeholder="Technical/soft skills" required></textarea>
+    <label for="stipend">Stipend Offered (₹)</label>
+    <input type="number" id="stipend" placeholder="Enter stipend amount" required />
   </div>
 
   <div class="form-group">
-    <label for="academic">Academic Details</label>
-    <textarea id="academic" placeholder="Degree, University, Year" required></textarea>
+    <label for="startDate">Start Date</label>
+    <input type="date" id="startDate" required />
   </div>
 
   <div class="form-group">
-    <label for="achievements">Achievements / Projects</label>
-    <textarea id="achievements" placeholder="Any notable achievements" required></textarea>
+    <label for="duration">Duration (in weeks/months)</label>
+    <input type="text" id="duration" placeholder="e.g., 8 weeks or 3 months" required />
   </div>
 
   <div class="form-group">
-    <label>Upload Resume / CV</label>
-    <label class="file-label" for="resume"><i class="fas fa-upload"></i> Click to Upload</label>
-    <input type="file" id="resume" accept=".pdf,.doc,.docx" style="display:none;" />
-    <div id="fileName">No file chosen</div>
+    <label for="email">Contact Email</label>
+    <input type="email" id="email" placeholder="e.g., hr@yourstartup.com" required />
   </div>
 
-  <button id="submitBtn"><i class="fas fa-paper-plane"></i> Submit Application</button>
+  <div class="form-group">
+    <label for="location">Location</label>
+    <select id="location" required>
+      <option value="">-- Select --</option>
+      <option value="Remote">Remote</option>
+      <option value="On-site">On-site</option>
+      <option value="Hybrid">Hybrid</option>
+    </select>
+  </div>
+
+  <button id="submitBtn"><i class="fas fa-paper-plane"></i> Submit</button>
   <div id="submissionMsg"></div>
 </div>
 
+<!-- Firebase SDK -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
   import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-firestore.js";
-  import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-storage.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyAlZZ79I_UCaTwV4KHo67Rauv99epa_VHc",
@@ -151,63 +137,51 @@
 
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
-  const storage = getStorage(app);
 
   const submitBtn = document.getElementById("submitBtn");
-  const submissionMsg = document.getElementById("submissionMsg");
-  const resumeInput = document.getElementById("resume");
-  const fileNameDiv = document.getElementById("fileName");
-
-  resumeInput.addEventListener("change", () => {
-    fileNameDiv.textContent = resumeInput.files.length > 0 ? resumeInput.files[0].name : "No file chosen";
-  });
-
-  document.querySelector(".file-label").addEventListener("click", () => resumeInput.click());
+  const msg = document.getElementById("submissionMsg");
 
   submitBtn.addEventListener("click", async () => {
-    const name = document.getElementById("name").value.trim();
-    const contact = document.getElementById("contact").value.trim();
-    const address = document.getElementById("address").value.trim();
-    const skills = document.getElementById("skills").value.trim();
-    const academic = document.getElementById("academic").value.trim();
-    const achievements = document.getElementById("achievements").value.trim();
+    const startupName = document.getElementById("startupName").value.trim();
+    const position = document.getElementById("position").value.trim();
+    const domain = document.getElementById("domain").value.trim();
+    const stipend = document.getElementById("stipend").value.trim();
+    const startDate = document.getElementById("startDate").value;
+    const duration = document.getElementById("duration").value.trim();
+    const email = document.getElementById("email").value.trim();
+    const location = document.getElementById("location").value;
 
-    if (!name || !contact || !address || !skills || !academic || !achievements) {
+    if (!startupName || !position || !domain || !stipend || !startDate || !duration || !email || !location) {
       alert("Please fill all fields.");
       return;
     }
 
-    let resumeURL = "";
-    if (resumeInput.files.length > 0) {
-      const file = resumeInput.files[0];
-      const storageRef = ref(storage, `internship_resumes/${Date.now()}_${file.name}`);
-      try {
-        const snapshot = await uploadBytes(storageRef, file);
-        resumeURL = await getDownloadURL(snapshot.ref);
-      } catch(err) {
-        console.error("Resume upload failed:", err);
-        alert("Failed to upload resume.");
-        return;
-      }
-    }
-
     try {
-      await addDoc(collection(db, "internship_applications"), {
-        name, contact, address, skills, academic, achievements, resumeURL,
+      await addDoc(collection(db, "internship_postings"), {
+        startupName,
+        position,
+        domain,
+        stipend: parseInt(stipend),
+        startDate,
+        duration,
+        email,
+        location,
         timestamp: serverTimestamp()
       });
-      submissionMsg.innerText = "✅ Application submitted successfully!";
-      document.getElementById("name").value = "";
-      document.getElementById("contact").value = "";
-      document.getElementById("address").value = "";
-      document.getElementById("skills").value = "";
-      document.getElementById("academic").value = "";
-      document.getElementById("achievements").value = "";
-      resumeInput.value = "";
-      fileNameDiv.textContent = "No file chosen";
+
+      msg.innerHTML = "✅ Internship posted successfully!";
+      // Clear fields
+      document.getElementById("startupName").value = "";
+      document.getElementById("position").value = "";
+      document.getElementById("domain").value = "";
+      document.getElementById("stipend").value = "";
+      document.getElementById("startDate").value = "";
+      document.getElementById("duration").value = "";
+      document.getElementById("email").value = "";
+      document.getElementById("location").value = "";
     } catch (err) {
-      console.error("Error submitting application:", err);
-      submissionMsg.innerText = "❌ Failed to submit application.";
+      console.error("Error submitting:", err);
+      msg.innerHTML = "❌ Failed to submit internship.";
     }
   });
 </script>
