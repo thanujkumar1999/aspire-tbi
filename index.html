@@ -9,11 +9,27 @@
     body {
       margin: 0;
       font-family: 'Segoe UI', sans-serif;
-      background: #f4f4f4;
       color: #333;
+      background-image: url('tbi-nf.jpeg'); /* Your uploaded image */
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+      position: relative;
+    }
+
+    /* Removed the overlay blur effect */
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(255,255,255,0.85); /* Keeps the overlay but without the blur */
+      z-index: 0;
     }
 
     .header {
+      position: relative;
+      z-index: 1;
       background: #004080;
       color: white;
       padding: 15px 20px;
@@ -25,26 +41,28 @@
     }
 
     .grid-container {
+      position: relative;
+      z-index: 1;
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
       gap: 15px;
       padding: 20px;
-      padding-bottom: 80px; /* ensure space above bottom nav */
+      padding-bottom: 100px; /* ensure space above bottom nav */
     }
 
     .card {
-      background: white;
+      background: rgba(255,255,255,0.95);
       padding: 25px 10px;
-      border-radius: 12px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      border-radius: 16px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.15);
       text-align: center;
       cursor: pointer;
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
     }
 
     .card:hover {
-      transform: scale(1.04);
-      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+      transform: scale(1.05);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.25);
     }
 
     .card i {
@@ -68,7 +86,8 @@
       display: flex;
       justify-content: space-around;
       padding: 10px 0;
-      z-index: 999;
+      z-index: 1;
+      box-shadow: 0 -3px 6px rgba(0,0,0,0.2);
     }
 
     .bottom-nav a {
@@ -89,15 +108,12 @@
       .card {
         padding: 20px 5px;
       }
-
       .card i {
         font-size: 24px;
       }
-
       .card span {
         font-size: 14px;
       }
-
       .bottom-nav a {
         font-size: 12px;
       }
@@ -106,7 +122,7 @@
 </head>
 <body>
 
-  <div class="header">ASPIRE-TBI</div>
+  <div class="header">ASPIRE-TBI, UoH</div>
 
   <div class="grid-container">
     <div class="card" onclick="location.href='instrumentbooking.html'">
@@ -121,13 +137,17 @@
       <i class="fas fa-id-card"></i>
       <span>My Dashboard</span>
     </div>
-    <div class="card" onclick="location.href='hackathon.html'">
-      <i class="fas fa-laptop-code"></i>
-      <span>Hackathon</span>
+    <div class="card" onclick="location.href='payment.html'">
+      <i class="fas fa-credit-card"></i>
+      <span>Payment</span>
     </div>
     <div class="card" onclick="location.href='internships.html'">
       <i class="fas fa-briefcase"></i>
       <span>Internships</span>
+    </div>
+    <div class="card" onclick="location.href='hackathon.html'">
+      <i class="fas fa-laptop-code"></i>
+      <span>Events</span>
     </div>
     <div class="card" onclick="location.href='history.html'">
       <i class="fas fa-history"></i>

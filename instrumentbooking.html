@@ -5,19 +5,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Instrument Booking</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
   <style>
     * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
-    body { margin: 0; padding: 20px; background: #f4f4f4; color: #333; }
-    .app-container { max-width: 500px; margin: auto; background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-    h2 { text-align: center; margin-bottom: 20px; }
+    body { margin: 0; padding: 20px; background: #f0f4ff; color: #333; }
+    .app-container { max-width: 500px; margin: auto; background: #fff; padding: 25px; border-radius: 14px; box-shadow: 0 6px 14px rgba(0,0,0,0.15); }
+    h2 { text-align: center; color: #004080; margin-bottom: 25px; }
     .form-group { margin-bottom: 15px; }
+    .form-group label { font-weight: 500; display: block; margin-bottom: 5px; }
     .form-group input, .form-group select { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; }
-    button { width: 100%; padding: 12px; background: #004080; color: #fff; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; }
-    button:hover { background: #003060; }
-    .icons { text-align: center; margin: 20px 0; }
-    .icons i { font-size: 32px; margin: 0 10px; color: #004080; }
-    #bookingIdDisplay { font-weight: bold; margin-top: 10px; text-align: center; }
+    button { width: 100%; padding: 12px; background: #004080; color: #fff; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; transition: 0.2s; }
+    button:hover { background: #002a60; }
+    .icons { text-align: center; margin-top: 25px; color: #004080; }
+    .icons i { font-size: 28px; margin: 0 10px; }
+    #bookingIdDisplay { margin-top: 15px; text-align: center; font-weight: 600; color: green; }
     #customTimeContainer { display: none; }
   </style>
 </head>
@@ -28,34 +28,27 @@
     <div class="form-group">
       <select id="instrument" required>
         <option value="">-- Select Instrument --</option>
-        <option value="Lyophilizer">Lyophilizer</option>
-        <option value="HPLC-ANALYTICAL">HPLC-ANALYTICAL</option>
-        <option value="HPLC-PREP">HPLC-PREP</option>
-        <option value="ORBITEK SHAKER">ORBITEK SHAKER</option>
-        <option value="SONICATOR">SONICATOR</option>
-        <option value="CENTRIFUGE-HIGH SPEED">CENTRIFUGE- HIGH SPEED</option>
-        <option value="K.F.TITRATOR">K.F.TITRATOR</option>
-        <option value="UV-VIS-SPECTROPHOTOMETER">UV-VIS-SPECTROPHOTOMETER</option>
-        <option value="LAMINAR FUMEHOOD">LAMINAR FUMEHOOD</option>
-        <option value="INVERTED MICROSCOPE">INVERTED MICROSCOPE</option>
-        <option value="CO2 INCUBATOR">CO2 INCUBATOR</option>
-        <option value="GEL-DOC IMAGING">GEL-DOC IMAGING</option>
-        <option value="PCR">PCR</option>
-        <option value="PH Meter">PH Meter</option>
+        <option>Lyophilizer</option>
+        <option>HPLC-ANALYTICAL</option>
+        <option>HPLC-PREP</option>
+        <option>ORBITEK SHAKER</option>
+        <option>SONICATOR</option>
+        <option>CENTRIFUGE-HIGH SPEED</option>
+        <option>K.F.TITRATOR</option>
+        <option>UV-VIS-SPECTROPHOTOMETER</option>
+        <option>LAMINAR FUMEHOOD</option>
+        <option>INVERTED MICROSCOPE</option>
+        <option>CO2 INCUBATOR</option>
+        <option>GEL-DOC IMAGING</option>
+        <option>PCR</option>
+        <option>PH Meter</option>
       </select>
     </div>
 
-    <div class="form-group">
-      <input type="text" id="name" placeholder="Startup Name" required />
-    </div>
-
-    <div class="form-group">
-      <input type="text" id="username" placeholder="Your Name" required />
-    </div>
-
-    <div class="form-group">
-      <input type="text" id="number" placeholder="Your Contact Number" required />
-    </div>
+    <div class="form-group"><input type="text" id="name" placeholder="Startup Name" required></div>
+    <div class="form-group"><input type="text" id="username" placeholder="Employee Name" required></div>
+    <div class="form-group"><input type="text" id="employeeid" placeholder="Employee ID" required></div>
+    <div class="form-group"><input type="text" id="number" placeholder="Contact Number" required></div>
 
     <div class="form-group">
       <label>Start Date:</label>
@@ -68,27 +61,17 @@
     </div>
 
     <div class="form-group">
+      <label>Select Slot:</label>
       <select id="slot">
         <option value="">-- Select Slot --</option>
       </select>
     </div>
 
     <div class="form-group" id="customTimeContainer">
-      <input type="text" id="customTime" placeholder="Enter custom time (e.g., 07:00 PM - 08:30 PM)" />
+      <input type="text" id="customTime" placeholder="e.g., 09:00 AM - 04:00 PM" />
     </div>
 
-    <div class="form-group">
-      <select id="purpose" required>
-        <option value="">-- Select Purpose --</option>
-        <option value="Research">Research</option>
-        <option value="Academic">Academic</option>
-        <option value="Testing">Testing</option>
-        <option value="Training">Training</option>
-        <option value="Demonstration">Demonstration</option>
-      </select>
-    </div>
-
-    <button id="bookBtn">Book Instrument</button>
+    <button id="bookBtn"><i class="fas fa-calendar-check"></i> Book Instrument</button>
     <div id="bookingIdDisplay"></div>
 
     <div class="icons">
@@ -101,13 +84,13 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
-    import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, query, where, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAlZZ79I_UCaTwV4KHo67Rauv99epa_VHc",
       authDomain: "aspire-tbi.firebaseapp.com",
       projectId: "aspire-tbi",
-      storageBucket: "aspire-tbi.appspot.com", 
+      storageBucket: "aspire-tbi.appspot.com",
       messagingSenderId: "9906395381",
       appId: "1:9906395381:web:546de5f0f6234703144dbc"
     };
@@ -126,22 +109,114 @@
       "custom"
     ];
 
-    const startDateInput = document.getElementById("startDate");
-    const endDateInput = document.getElementById("endDate");
     const slotSelect = document.getElementById("slot");
     const customTimeContainer = document.getElementById("customTimeContainer");
 
-    const today = new Date();
-    const maxDate = new Date();
-    maxDate.setDate(today.getDate() + 7);
+    function normalizeSlot(str) {
+      return str.replace(/to/gi, "-").replace(/\s+/g, " ").trim();
+    }
 
-    startDateInput.min = today.toISOString().split('T')[0];
-    startDateInput.max = maxDate.toISOString().split('T')[0];
-    endDateInput.min = today.toISOString().split('T')[0];
-    endDateInput.max = maxDate.toISOString().split('T')[0];
+    function toMinutes(timeStr) {
+      if (!timeStr) return 0;
+      timeStr = timeStr.trim().toUpperCase();
+      if (!timeStr.includes("AM") && !timeStr.includes("PM")) {
+        const [hours, minutes] = timeStr.split(":").map(Number);
+        return hours * 60 + (minutes || 0);
+      }
+      const [time, modifier] = timeStr.split(" ");
+      let [hours, minutes] = time.split(":").map(Number);
+      if (modifier === "PM" && hours !== 12) hours += 12;
+      if (modifier === "AM" && hours === 12) hours = 0;
+      return hours * 60 + (minutes || 0);
+    }
 
-    function toggleCustomTime(value) {
-      customTimeContainer.style.display = value === "custom" ? "block" : "none";
+    function isOverlap(slot1, slot2) {
+      try {
+        slot1 = normalizeSlot(slot1);
+        slot2 = normalizeSlot(slot2);
+        const [s1, e1] = slot1.split("-").map(s => s.trim());
+        const [s2, e2] = slot2.split("-").map(s => s.trim());
+        return toMinutes(s1) < toMinutes(e2) && toMinutes(s2) < toMinutes(e1);
+      } catch {
+        return false;
+      }
+    }
+
+    function validateCustomSlot(slot) {
+      const regex = /^([0]?[1-9]|1[0-2]):([0-5][0-9])\s?(AM|PM)\s?-\s?([0]?[1-9]|1[0-2]):([0-5][0-9])\s?(AM|PM)$/i;
+      if (!regex.test(slot.trim())) return false;
+      const [start, end] = slot.split("-").map(s => s.trim());
+      return toMinutes(end) > toMinutes(start);
+    }
+
+    async function checkSlotAvailability(instrument, date, slot) {
+      const q = query(collection(db, "bookings"), where("instrument", "==", instrument), where("date", "==", date));
+      const snap = await getDocs(q);
+      for (const doc of snap.docs) {
+        const existingSlot = normalizeSlot(doc.data().slot);
+        if (isOverlap(existingSlot, slot)) {
+          return false;
+        }
+      }
+      return true;
+    }
+
+    async function bookInstrument() {
+      const instrument = document.getElementById("instrument").value.trim();
+      const name = document.getElementById("name").value.trim();
+      const username = document.getElementById("username").value.trim();
+      const employeeid = document.getElementById("employeeid").value.trim();
+      const number = document.getElementById("number").value.trim();
+      let slot = document.getElementById("slot").value;
+      const customTime = document.getElementById("customTime").value.trim();
+      const startDate = new Date(document.getElementById("startDate").value);
+      const endDate = new Date(document.getElementById("endDate").value);
+
+      const today = new Date(); today.setHours(0,0,0,0);
+      const maxDate = new Date(today); maxDate.setDate(today.getDate() + 7);
+
+      if (startDate < today || endDate < today || startDate > maxDate || endDate > maxDate) {
+        return alert("⚠️ You can only book from today up to the next 7 days.");
+      }
+
+      if (slot === "custom") {
+        if (!customTime) return alert("Please enter custom time range.");
+        if (!validateCustomSlot(customTime)) {
+          return alert("⚠️ Custom time must be in format: HH:MM AM/PM - HH:MM AM/PM and end time > start time");
+        }
+        slot = normalizeSlot(customTime);
+      }
+
+      if (!instrument || !name || !username || !employeeid || !number || !slot || isNaN(startDate) || isNaN(endDate))
+        return alert("Please fill all fields.");
+
+      const diffDays = Math.floor((endDate - startDate) / (1000*60*60*24)) + 1;
+      if (diffDays < 1 || diffDays > 2) return alert("You can only book up to 2 days.");
+
+      const bookingIds = [];
+
+      for (let i = 0; i < diffDays; i++) {
+        const bookingDate = new Date(startDate);
+        bookingDate.setDate(startDate.getDate() + i);
+        const formattedDate = bookingDate.toISOString().split("T")[0];
+
+        const available = await checkSlotAvailability(instrument, formattedDate, slot);
+        if (!available) {
+          alert(`⚠️ This time slot is already booked`);
+          return;
+        }
+
+        const bookingId = `BK_${instrument}_${formattedDate}_${Date.now()}`;
+        bookingIds.push(bookingId);
+
+        await addDoc(collection(db, "bookings"), {
+          instrument, name, username, employeeid, number,
+          date: formattedDate, slot, bookingId, timestamp: serverTimestamp()
+        });
+      }
+
+      document.getElementById("bookingIdDisplay").innerText = 
+        `✅ Booking Successful! IDs: ${bookingIds.join(", ")}`;
     }
 
     function updateSlotOptions() {
@@ -152,83 +227,42 @@
         option.textContent = slot;
         slotSelect.appendChild(option);
       });
-      toggleCustomTime("");
     }
 
-    function generateBookingId(inst, date) {
-      const timestamp = new Date().toISOString().replace(/[-:T.]/g, '').slice(0, 14);
-      return `BK_${inst}_${date}_${timestamp}`;
-    }
+    slotSelect.addEventListener("change", e => {
+      customTimeContainer.style.display = e.target.value === "custom" ? "block" : "none";
+    });
 
-    async function bookInstrument() {
-      const instrument = document.getElementById("instrument").value.trim();
-      const name = document.getElementById("name").value.trim();
-      const username = document.getElementById("username").value.trim();
-      const number = document.getElementById("number").value.trim();
-      const purpose = document.getElementById("purpose").value;
-      let slot = document.getElementById("slot").value;
-      const customTime = document.getElementById("customTime").value.trim();
-
-      const startDate = new Date(startDateInput.value);
-      const endDate = new Date(endDateInput.value);
-
-      if (slot === "custom") {
-        if (!customTime) {
-          alert("Please enter a custom time range.");
-          return;
-        }
-        slot = customTime;
-      }
-
-      if (!instrument || !name || !username || !number || !slot || !purpose || isNaN(startDate) || isNaN(endDate)) {
-        alert("Please fill all fields.");
-        return;
-      }
-
-      const diffDays = Math.floor((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
-
-      if (diffDays < 1 || diffDays > 2) {
-        alert("You can only book up to 2 days.");
-        return;
-      }
-
-      const bookingIds = [];
-
-      for (let i = 0; i < diffDays; i++) {
-        const bookingDate = new Date(startDate);
-        bookingDate.setDate(startDate.getDate() + i);
-        const formattedDate = bookingDate.toISOString().split('T')[0];
-        const bookingId = generateBookingId(instrument, formattedDate);
-        bookingIds.push(bookingId);
-
-        try {
-          await addDoc(collection(db, "bookings"), {
-            instrument,
-            name,
-            username,
-            number,
-            date: formattedDate,
-            slot,
-            purpose,
-            bookingId,
-            timestamp: serverTimestamp()
-          });
-        } catch (error) {
-          console.error("Error saving booking:", error);
-          alert("Failed to save booking for " + formattedDate);
-        }
-      }
-
-      document.getElementById("bookingIdDisplay").innerText = `Booking Successful. IDs: ${bookingIds.join(", ")}`;
-      // alert("Booking(s) saved to Firebase!");
-    }
-
-    startDateInput.addEventListener("change", updateSlotOptions);
-    endDateInput.addEventListener("change", updateSlotOptions);
-    slotSelect.addEventListener("change", (e) => toggleCustomTime(e.target.value));
     document.getElementById("bookBtn").addEventListener("click", bookInstrument);
 
+    // --- Set active dates in calendar ---
+    function setActiveDates() {
+      const startDateInput = document.getElementById("startDate");
+      const endDateInput = document.getElementById("endDate");
+
+      const today = new Date(); today.setHours(0,0,0,0);
+      const maxDate = new Date(today); maxDate.setDate(today.getDate() + 7);
+      const formatDate = date => date.toISOString().split("T")[0];
+
+      startDateInput.min = formatDate(today);
+      startDateInput.max = formatDate(maxDate);
+      endDateInput.min = formatDate(today);
+      endDateInput.max = formatDate(maxDate);
+
+      startDateInput.addEventListener("change", () => {
+        const start = new Date(startDateInput.value);
+        const maxEnd = new Date(start);
+        maxEnd.setDate(start.getDate() + 1);
+        endDateInput.min = formatDate(start);
+        endDateInput.max = formatDate(maxEnd > maxDate ? maxDate : maxEnd);
+        if (new Date(endDateInput.value) < start) {
+          endDateInput.value = formatDate(start);
+        }
+      });
+    }
+
     updateSlotOptions();
+    setActiveDates();
   </script>
 </body>
 </html>

@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Payment - Aspire-TBI</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <style>
+    * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+    body { margin: 0; padding: 20px; background: #f0f4f8; color: #333; }
+    .app-container {
+      max-width: 500px;
+      margin: auto;
+      background: #fff;
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+    }
+    h2 { text-align: center; margin-bottom: 25px; color: #004080; }
+    .form-group { margin-bottom: 18px; }
+    .form-group label { display: block; margin-bottom: 6px; font-weight: 500; }
+    select, input { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ccc; font-size: 16px; }
+    button {
+      width: 100%;
+      padding: 14px;
+      background: #004080;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: 0.2s;
+    }
+    button:hover { background: #002a60; }
+    #paymentInfo { margin-top: 20px; text-align: center; font-weight: bold; color: green; }
+  </style>
+</head>
+<body>
+
+  <div class="app-container">
+    <h2><i class="fas fa-credit-card"></i> Make a Payment</h2>
+
+    <div class="form-group">
+      <label for="paymentType">Select Payment Type</label>
+      <select id="paymentType">
+        <option value="">-- Select Payment Type --</option>
+        <option value="license">License</option>
+        <option value="startup">Startup</option>
+        <option value="other">Other Payments</option>
+      </select>
+    </div>
+
+    <div class="form-group" id="amountContainer" style="display:none;">
+      <label for="amount">Enter Amount (₹)</label>
+      <input type="number" id="amount" placeholder="Enter amount" min="1" />
+    </div>
+
+    <div class="form-group" id="detailsContainer" style="display:none;">
+      <label for="details">Details / Notes</label>
+      <input type="text" id="details" placeholder="Any additional info" />
+    </div>
+
+    <button id="payBtn"><i class="fas fa-credit-card"></i> Pay Now</button>
+
+    <div id="paymentInfo"></div>
+  </div>
+
+  <!-- Razorpay Script -->
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+  <script>
+    const paymentType = document.getElementById("paymentType");
+    const amountContainer = document.getElementById("amountContainer");
+    const detailsContainer = document.getElementById("detailsContainer");
+    const payBtn = document.getElementById("payBtn");
+    const paymentInfo = document.getElementById("paymentInfo");
+
+    // Show/hide amount & details fields
+    paymentType.addEventListener("change", () => {
+      if(paymentType.value) {
+        amountContainer.style.display = "block";
+        detailsContainer.style.display = "block";
+      } else {
+        amountContainer.style.display = "none";
+        detailsContainer.style.display = "none";
+      }
+    });
+
+    payBtn.addEventListener("click", () => {
+      const type = paymentType.value;
+      const amount = document.getElementById("amount").value;
+      const details = document.getElementById("details").value;
+
+      if(!type) return alert("Please select a payment type.");
+      if(!amount || amount <= 0) return alert("Please enter a valid amount.");
+
+      // Razorpay payment options
+      const options = {
+        key: "YOUR_RAZORPAY_KEY_ID", // Replace with your Razorpay Key ID
+        amount: amount * 100, // Amount in paise
+        currency: "INR",
+        name: "Aspire-TBI",
+        description: `Payment for ${type}`,
+        image: "https://aspire-tbi.uohyd.ac.in/logo.png", // optional logo
+        handler: function (response){
+          // Payment successful
+          paymentInfo.innerHTML = `✅ Payment Successful!<br>Payment ID: <b>${response.razorpay_payment_id}</b><br>Type: <b>${type}</b><br>Amount: ₹${amount}<br>Details: ${details || 'N/A'}`;
+        },
+        prefill: {
+          name: "User Name",
+          email: "user@example.com",
+          contact: ""
+        },
+        theme: {
+          color: "#004080"
+        }
+      };
+
+      const rzp = new Razorpay(options);
+      rzp.open();
+    });
+  </script>
+
+</body>
+</html>

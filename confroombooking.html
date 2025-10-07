@@ -46,14 +46,8 @@
       text-align: center;
       color: #333;
     }
-    #customTimeContainer {
-      display: none;
-    }
-    @media (max-width: 480px) {
-      .app-container {
-        padding: 15px;
-      }
-    }
+    #customTimeContainer { display: none; }
+    @media (max-width: 480px) { .app-container { padding: 15px; } }
   </style>
 </head>
 <body>
@@ -86,7 +80,7 @@
       </select>
     </div>
     <div class="form-group" id="customTimeContainer">
-      <input type="text" id="customTime" placeholder="Enter custom time (e.g., 07:00 PM - 08:30 PM)" />
+      <input type="text" id="customTime" placeholder="Enter custom time (HH:MM AM/PM - HH:MM AM/PM)" />
     </div>
     <div class="form-group">
       <select id="purpose" required>
@@ -104,13 +98,13 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
-    import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, query, where, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAlZZ79I_UCaTwV4KHo67Rauv99epa_VHc",
       authDomain: "aspire-tbi.firebaseapp.com",
       projectId: "aspire-tbi",
-      storageBucket: "aspire-tbi.appspot.com",  // corrected
+      storageBucket: "aspire-tbi.appspot.com",
       messagingSenderId: "9906395381",
       appId: "1:9906395381:web:546de5f0f6234703144dbc"
     };
@@ -118,7 +112,6 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    const bookings = [];
     const timeSlots = [
       "09:00 AM - 10:00 AM",
       "10:00 AM - 11:00 AM",
@@ -135,7 +128,7 @@
     const customTimeContainer = document.getElementById("customTimeContainer");
     const bookRoomBtn = document.getElementById("bookRoomBtn");
 
-    // Set date range
+    // Restrict date from today to 3 days ahead
     const today = new Date();
     const maxDate = new Date();
     maxDate.setDate(today.getDate() + 3);
@@ -148,19 +141,17 @@
 
     function updateSlotOptions() {
       slotSelect.innerHTML = '<option value="">-- Select Slot --</option>';
-      const sel = dateInput.value;
-      if (!sel) return;
-      const selectedDate = new Date(sel);
+      const selDate = dateInput.value;
+      if (!selDate) return;
+
+      const selectedDate = new Date(selDate);
       const now = new Date();
 
       const available = timeSlots.filter(slot => {
         if (slot === "custom") return true;
-        if (selectedDate.toDateString() !== now.toDateString()) {
-          return true;
-        }
-        // parse hour from slot
-        const hourString = slot.split(":")[0];
-        const hour = parseInt(hourString);
+        if (selectedDate.toDateString() !== now.toDateString()) return true;
+
+        const hour = parseInt(slot.split(":")[0]);
         const isPM = slot.includes("PM");
         let slotHour24 = hour % 12 + (isPM ? 12 : 0);
         const slotStart = new Date(selectedDate);
@@ -175,12 +166,49 @@
         slotSelect.appendChild(opt);
       });
 
-      toggleCustomTime("");  // hide custom time by default
+      toggleCustomTime("");
     }
 
     function generateBookingId(room) {
       const ts = new Date().toISOString().replace(/[-:T.]/g, "").slice(0, 14);
       return `CR_${room}_${ts}`;
+    }
+
+    function isValidTimeRange(str) {
+      const regex = /^([0]?[1-9]|1[0-2]):[0-5][0-9]\s?(AM|PM)\s?-\s?([0]?[1-9]|1[0-2]):[0-5][0-9]\s?(AM|PM)$/i;
+      return regex.test(str.trim());
+    }
+
+    function normalizeSlot(str) {
+      return str.replace(/to/gi, "-").replace(/\s+/g, " ").trim();
+    }
+
+    function toMinutes(timeStr) {
+      const [time, modifier] = timeStr.split(" ");
+      let [hours, minutes] = time.split(":")[0].split(":").map(Number);
+      if (modifier === "PM" && hours !== 12) hours += 12;
+      if (modifier === "AM" && hours === 12) hours = 0;
+      return hours * 60 + (minutes || 0);
+    }
+
+    function isOverlap(slot1, slot2) {
+      try {
+        slot1 = normalizeSlot(slot1);
+        slot2 = normalizeSlot(slot2);
+        const [s1, e1] = slot1.split("-").map(x => x.trim());
+        const [s2, e2] = slot2.split("-").map(x => x.trim());
+        return toMinutes(s1) < toMinutes(e2) && toMinutes(s2) < toMinutes(e1);
+      } catch { return false; }
+    }
+
+    async function isSlotAvailable(room, date, slot) {
+      const q = query(collection(db, "conference_bookings"), where("room", "==", room), where("date", "==", date));
+      const snapshot = await getDocs(q);
+      for (const doc of snapshot.docs) {
+        const existingSlot = doc.data().slot;
+        if (isOverlap(existingSlot, slot)) return false;
+      }
+      return true;
     }
 
     async function bookRoom() {
@@ -198,44 +226,38 @@
           alert("Please enter a custom time range.");
           return;
         }
+        if (!isValidTimeRange(customTime)) {
+          alert("Invalid custom time format. Use HH:MM AM/PM - HH:MM AM/PM.");
+          return;
+        }
         slot = customTime;
       }
+
       if (!room || !startup || !employee || !contact || !date || !slot || !purpose) {
         alert("Please fill all fields.");
+        return;
+      }
+
+      if (!(await isSlotAvailable(room, date, slot))) {
+        alert("⚠️ This room is already booked for the selected time slot.");
         return;
       }
 
       const bookingId = generateBookingId(room);
       document.getElementById("bookingIdDisplay").textContent = `Booking ID: ${bookingId}`;
 
-      bookings.push({ room, startup, employee, contact, date, slot, purpose, bookingId });
-
       try {
         await addDoc(collection(db, "conference_bookings"), {
-          room,
-          startup,
-          employee,
-          contact,
-          date,
-          slot,
-          purpose,
-          bookingId,
-          timestamp: serverTimestamp()
+          room, startup, employee, contact, date, slot, purpose, bookingId, timestamp: serverTimestamp()
         });
-        // alert("Booking saved to Firebase Firestore!");
       } catch (err) {
         console.error("Error saving booking:", err);
-        // alert("Failed to save booking.");
       }
     }
 
-    // Event listeners
     dateInput.addEventListener("change", updateSlotOptions);
     slotSelect.addEventListener("change", e => toggleCustomTime(e.target.value));
     bookRoomBtn.addEventListener("click", bookRoom);
-
-    window.bookRoom = bookRoom;
-
   </script>
 </body>
 </html>
