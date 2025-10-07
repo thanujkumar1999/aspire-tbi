@@ -2,171 +2,203 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>User Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    /* Reset some default */
-    * {
-      box-sizing: border-box;
-    }
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      padding: 20px;
-      background: #f0f4f8;
-      color: #333;
+      background: #f0f6ff;
       margin: 0;
       min-height: 100vh;
       display: flex;
-      flex-direction: column;
+      justify-content: center;
       align-items: center;
+      padding: 20px;
     }
+
     .container {
-      max-width: 700px;
-      width: 100%;
       background: white;
-      border-radius: 12px;
-      padding: 30px 40px;
-      box-shadow: 0 4px 15px rgb(0 0 0 / 0.1);
-      display: flex;
-      flex-direction: column;
-      gap: 25px;
-    }
-    .profile {
+      border-radius: 20px;
+      box-shadow: 0 15px 40px rgba(0,0,0,0.1);
+      max-width: 420px;
+      width: 100%;
+      padding: 40px 50px;
+      box-sizing: border-box;
       text-align: center;
-      border-bottom: 1px solid #e1e8ed;
-      padding-bottom: 20px;
+      transition: box-shadow 0.3s ease;
     }
-    .profile img {
+
+    .container:hover {
+      box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+    }
+
+    h2 {
+      color: #003366;
+      margin-bottom: 25px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+    }
+
+    .avatar-wrapper {
+      position: relative;
+      width: 140px;
+      height: 140px;
+      margin: 0 auto 30px;
       border-radius: 50%;
-      width: 110px;
-      height: 110px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+      background: #e1e8ff;
+      overflow: hidden;
+      cursor: pointer;
+      border: 3px solid #003366;
+      transition: transform 0.2s ease;
+    }
+    .avatar-wrapper:hover {
+      transform: scale(1.05);
+    }
+
+    img.avatar {
+      width: 100%;
+      height: 100%;
       object-fit: cover;
-      margin-bottom: 15px;
-      border: 3px solid #2196f3;
-      background: #e3f2fd;
+      display: block;
     }
-    .profile h2 {
-      margin: 0;
-      font-weight: 700;
-      font-size: 1.8rem;
-      color: #0d47a1;
+
+    #avatarInput {
+      display: none;
     }
-    .profile p {
-      margin: 5px 0 0 0;
-      font-weight: 500;
-      color: #555;
-      font-size: 0.9rem;
-    }
-    .bookings {
-      flex-grow: 1;
-      overflow-y: auto;
-      max-height: 450px;
-    }
-    .bookings h3 {
-      margin: 0 0 10px 0;
-      color: #0d47a1;
-      font-weight: 700;
-      font-size: 1.3rem;
-    }
-    .booking {
-      background: #fafafa;
-      border-left: 6px solid #2196f3;
-      padding: 18px 20px;
-      margin-bottom: 15px;
-      border-radius: 8px;
-      box-shadow: 0 2px 6px rgb(0 0 0 / 0.08);
-      transition: background 0.2s ease;
-      font-size: 0.95rem;
-      line-height: 1.4;
-    }
-    .booking:hover {
-      background: #e3f2fd;
-    }
-    .booking.conference {
-      border-color: #673ab7;
-    }
-    .booking strong {
-      display: inline-block;
-      width: 110px;
-      font-weight: 600;
-      color: #0d47a1;
-    }
-    #logoutBtn {
-      margin: 0 auto;
-      padding: 12px 30px;
-      background: #f44336;
+
+    label[for="avatarInput"] {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      background: #003366;
       color: white;
-      border: none;
-      border-radius: 30px;
+      font-size: 14px;
+      padding: 6px 12px;
+      border-top-left-radius: 10px;
+      user-select: none;
+      opacity: 0.85;
+      transition: opacity 0.2s ease;
+    }
+    label[for="avatarInput"]:hover {
+      opacity: 1;
+    }
+
+    form {
+      text-align: left;
+    }
+
+    label {
+      display: block;
+      margin-top: 15px;
+      margin-bottom: 7px;
+      font-weight: 600;
+      color: #003366;
+      font-size: 14px;
+      letter-spacing: 0.03em;
+    }
+
+    input[type="text"], input[type="email"], input[type="url"] {
+      width: 100%;
+      padding: 12px 15px;
       font-size: 16px;
+      border: 1.5px solid #c4cde7;
+      border-radius: 12px;
+      box-sizing: border-box;
+      transition: border-color 0.3s ease;
+      outline-offset: 2px;
+    }
+    input[type="text"]:focus, input[type="email"]:focus, input[type="url"]:focus {
+      border-color: #003366;
+      outline: none;
+    }
+
+    .btn-primary {
+      margin-top: 30px;
+      width: 100%;
+      padding: 14px 0;
+      font-size: 17px;
+      border-radius: 14px;
+      border: none;
       cursor: pointer;
       font-weight: 700;
-      box-shadow: 0 4px 12px rgb(244 67 54 / 0.5);
-      transition: background 0.3s ease;
-      max-width: 200px;
+      color: white;
+      background-color: #003366;
+      box-shadow: 0 5px 15px rgba(0, 51, 102, 0.3);
+      transition: background-color 0.3s ease;
     }
-    #logoutBtn:hover {
-      background: #d32f2f;
-    }
-
-    /* Loading spinner */
-    .spinner {
-      border: 5px solid #f3f3f3;
-      border-top: 5px solid #2196f3;
-      border-radius: 50%;
-      width: 40px;
-      height: 40px;
-      animation: spin 1s linear infinite;
-      margin: 40px auto;
-    }
-    @keyframes spin {
-      0% { transform: rotate(0deg);}
-      100% { transform: rotate(360deg);}
+    .btn-primary:hover {
+      background-color: #001f4d;
     }
 
-    /* Responsive */
-    @media (max-width: 600px) {
-      .container {
-        padding: 20px 25px;
-      }
-      .booking strong {
-        width: 90px;
-      }
+    .btn-logout {
+      margin-top: 15px;
+      width: 100%;
+      padding: 12px 0;
+      font-size: 16px;
+      border-radius: 14px;
+      border: none;
+      cursor: pointer;
+      font-weight: 700;
+      color: white;
+      background-color: #e94e42;
+      box-shadow: 0 5px 15px rgba(233, 78, 66, 0.4);
+      transition: background-color 0.3s ease;
+    }
+    .btn-logout:hover {
+      background-color: #b3322c;
+    }
+
+    .message {
+      margin-top: 15px;
+      font-size: 14px;
+      color: green;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    .error {
+      margin-top: 15px;
+      font-size: 14px;
+      color: #d32f2f;
+      font-weight: 600;
+      text-align: center;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="profile" id="profileSection">
-      <img src="https://i.imgur.com/9g7H4g1.png" alt="User Avatar" />
-      <h2 id="welcomeMsg">Welcome</h2>
-      <p id="currentTime"></p>
+
+  <div class="container" role="main" aria-label="User Dashboard">
+    <h2>User Dashboard</h2>
+    
+    <div class="avatar-wrapper" title="Click to change avatar">
+      <img src="" alt="User Avatar" class="avatar" id="avatarImg" />
+      <label for="avatarInput" aria-label="Upload new profile image">Edit</label>
+      <input type="file" id="avatarInput" accept="image/*" aria-describedby="avatarUploadDesc" />
     </div>
 
-    <div class="bookings">
-      <h3>Your Bookings:</h3>
-      <div id="bookingList">
-        <div class="spinner" aria-label="Loading bookings"></div>
-      </div>
-    </div>
+    <form id="profileForm" autocomplete="off" novalidate>
+      <label for="name">Name</label>
+      <input type="text" id="name" name="name" required aria-required="true" />
 
-    <button id="logoutBtn" aria-label="Logout from dashboard">Logout</button>
+      <label for="email">Email</label>
+      <input type="email" id="email" name="email" required aria-required="true" />
+
+      <label for="avatarUrl">Avatar URL (optional)</label>
+      <input type="url" id="avatarUrl" name="avatarUrl" placeholder="https://example.com/image.jpg" />
+
+      <button type="submit" class="btn-primary">Save Changes</button>
+    </form>
+
+    <button class="btn-logout" id="logoutBtn" aria-label="Logout from dashboard">Logout</button>
+
+    <div class="message" id="successMsg" role="alert" aria-live="polite"></div>
+    <div class="error" id="errorMsg" role="alert" aria-live="assertive"></div>
   </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
-    import {
-      getDatabase,
-      ref,
-      get
-    } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";
-    import {
-      getFirestore,
-      collection,
-      query,
-      where,
-      getDocs
-    } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-firestore.js";
+    import { getDatabase, ref, get, update } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAlZZ79I_UCaTwV4KHo67Rauv99epa_VHc",
@@ -180,118 +212,113 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
-    const firestore = getFirestore(app);
 
-    const profileSection = document.getElementById("profileSection");
-    const bookingList = document.getElementById("bookingList");
-    const welcomeMsg = document.getElementById("welcomeMsg");
-    const currentTime = document.getElementById("currentTime");
-    const logoutBtn = document.getElementById("logoutBtn");
-
-    // Get user from localStorage (replace this logic with your own if needed)
     const user = JSON.parse(localStorage.getItem("user"));
+    const nameInput = document.getElementById("name");
+    const emailInput = document.getElementById("email");
+    const avatarUrlInput = document.getElementById("avatarUrl");
+    const avatarImg = document.getElementById("avatarImg");
+    const successMsg = document.getElementById("successMsg");
+    const errorMsg = document.getElementById("errorMsg");
+    const logoutBtn = document.getElementById("logoutBtn");
+    const profileForm = document.getElementById("profileForm");
+    const avatarInput = document.getElementById("avatarInput");
 
-    if (!user) {
+    if (!user || !user.username) {
+      // Redirect if no user logged in
       window.location.href = "login.html";
     } else {
-      welcomeMsg.textContent = `Welcome, ${user.name || user.username}`;
-      if (user.email) {
-        // Show email below welcome if available
-        let emailEl = profileSection.querySelector('p');
-        emailEl.textContent = user.email;
-      }
-      if (user.avatarUrl) {
-        profileSection.querySelector('img').src = user.avatarUrl;
-      }
-      updateTime();
-      loadBookings(user.username);
+      loadUserProfile(user.username);
     }
 
-    // Update current date/time every minute
-    function updateTime() {
-      const now = new Date();
-      const options = { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute:'2-digit' };
-      currentTime.textContent = now.toLocaleDateString(undefined, options);
-      setTimeout(updateTime, 60000);
-    }
-
-    async function loadBookings(username) {
-      bookingList.innerHTML = '<div class="spinner" aria-label="Loading bookings"></div>';
-      try {
-        // Conference bookings
-        const conferenceQuery = query(
-          collection(firestore, "conference_bookings"),
-          where("employee", "==", username)
-        );
-        const conferenceSnap = await getDocs(conferenceQuery);
-
-        // Instrument bookings
-        const instrumentQuery = query(
-          collection(firestore, "bookings"),
-          where("employee", "==", username)
-        );
-        const instrumentSnap = await getDocs(instrumentQuery);
-
-        bookingList.innerHTML = "";
-
-        if (conferenceSnap.empty && instrumentSnap.empty) {
-          bookingList.innerHTML = "<p>No bookings found.</p>";
-          return;
-        }
-
-        conferenceSnap.forEach(doc => {
-          const data = doc.data();
-          bookingList.innerHTML += `
-            <div class="booking conference" tabindex="0" aria-label="Conference Room booking on ${data.date}, slot ${data.slot}">
-              <strong>Conference Room:</strong> ${escapeHTML(data.room)}<br/>
-              <strong>Date:</strong> ${escapeHTML(data.date)}<br/>
-              <strong>Slot:</strong> ${escapeHTML(data.slot)}<br/>
-              <strong>Purpose:</strong> ${escapeHTML(data.purpose)}<br/>
-              <strong>Booking ID:</strong> ${escapeHTML(data.bookingId || doc.id)}
-            </div>
-          `;
+    function loadUserProfile(username) {
+      const userRef = ref(db, `users/${username}`);
+      get(userRef)
+        .then(snapshot => {
+          if (snapshot.exists()) {
+            const data = snapshot.val();
+            nameInput.value = data.name || "";
+            emailInput.value = data.email || "";
+            avatarUrlInput.value = data.avatarUrl || "";
+            if(data.avatarBase64) {
+              avatarImg.src = data.avatarBase64;
+            } else if(data.avatarUrl) {
+              avatarImg.src = data.avatarUrl;
+            } else {
+              avatarImg.src = "https://i.imgur.com/9g7H4g1.png"; // fallback default
+            }
+          } else {
+            errorMsg.textContent = "User data not found.";
+          }
+        })
+        .catch(error => {
+          errorMsg.textContent = "Error loading profile: " + error.message;
         });
-
-        instrumentSnap.forEach(doc => {
-          const data = doc.data();
-          bookingList.innerHTML += `
-            <div class="booking" tabindex="0" aria-label="Instrument booking for ${data.instrument} on ${data.date}, slot ${data.slot}">
-              <strong>Instrument:</strong> ${escapeHTML(data.instrument)}<br/>
-              <strong>Date:</strong> ${escapeHTML(data.date)}<br/>
-              <strong>Slot:</strong> ${escapeHTML(data.slot)}<br/>
-              <strong>Purpose:</strong> ${escapeHTML(data.purpose)}<br/>
-              <strong>Booking ID:</strong> ${escapeHTML(data.bookingId || doc.id)}
-            </div>
-          `;
-        });
-      } catch (err) {
-        bookingList.innerHTML = `<p style="color:red;">Error fetching bookings: ${escapeHTML(err.message)}</p>`;
-        console.error(err);
-      }
     }
 
-    logoutBtn.addEventListener('click', () => {
-      const confirmLogout = confirm("Are you sure you want to logout?");
-      if (confirmLogout) {
-        localStorage.removeItem("user");
-        window.location.href = "login.html";
+    // Handle image file input change
+    avatarInput.addEventListener("change", e => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      if (!file.type.startsWith('image/')) {
+        errorMsg.textContent = "Selected file is not an image.";
+        return;
       }
+
+      errorMsg.textContent = "";
+      successMsg.textContent = "";
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        avatarImg.src = reader.result;
+        // Store the base64 string temporarily in a data attribute
+        avatarImg.dataset.base64 = reader.result;
+      };
+      reader.readAsDataURL(file);
     });
 
-    // Helper to escape text to prevent XSS
-    function escapeHTML(str) {
-      if (!str) return "";
-      return str.replace(/[&<>"']/g, function(match) {
-        const escape = {
-          '&': '&amp;',
-          '<': '&lt;',
-          '>': '&gt;',
-          '"': '&quot;',
-          "'": '&#39;'
-        };
-        return escape[match];
-      });
-    }
+    profileForm.addEventListener("submit", e => {
+      e.preventDefault();
+      successMsg.textContent = "";
+      errorMsg.textContent = "";
+
+      const updatedData = {
+        name: nameInput.value.trim(),
+        email: emailInput.value.trim(),
+        avatarUrl: avatarUrlInput.value.trim()
+      };
+
+      if (!updatedData.name || !updatedData.email) {
+        errorMsg.textContent = "Name and Email are required.";
+        return;
+      }
+
+      // Check if user uploaded an image; if yes, save Base64 string
+      if(avatarImg.dataset.base64) {
+        updatedData.avatarBase64 = avatarImg.dataset.base64;
+        updatedData.avatarUrl = ""; // clear URL if Base64 image is used
+      }
+
+      const userRef = ref(db, `users/${user.username}`);
+      update(userRef, updatedData)
+        .then(() => {
+          successMsg.textContent = "Profile updated successfully!";
+          // update localStorage user name
+          user.name = updatedData.name;
+          localStorage.setItem("user", JSON.stringify(user));
+          // clear temp base64 data attribute after saving
+          delete avatarImg.dataset.base64;
+        })
+        .catch(err => {
+          errorMsg.textContent = "Failed to update profile: " + err.message;
+        });
+    });
+
+    logoutBtn.addEventListener("click", () => {
+      localStorage.removeItem("user");
+      window.location.href = "login.html";
+    });
   </script>
 </body>
 </html>
