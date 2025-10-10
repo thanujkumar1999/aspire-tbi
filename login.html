@@ -18,51 +18,34 @@
       justify-content: center;
       align-items: center;
       height: 100vh;
-      overflow: hidden;
     }
 
-    /* --- SPLASH SCREEN --- */
+    /* Splash Screen */
     #splash {
       position: fixed;
       top: 0; left: 0;
-      width: 100%;
-      height: 100%;
+      width: 100%; height: 100%;
       background: white;
       display: flex;
       justify-content: center;
       align-items: center;
-      flex-direction: column;
       z-index: 9999;
-      animation: fadeOut 1s ease 2.5s forwards;
+      flex-direction: column;
+      transition: opacity 0.8s ease;
     }
 
     #splash img {
-      width: 180px;
+      width: 160px;
       height: auto;
-      animation: zoomIn 1.5s ease-in-out;
+      margin-bottom: 20px;
+      animation: fadeIn 2s ease-in-out;
     }
 
-    #splash h1 {
-      margin-top: 15px;
-      font-size: 22px;
-      color: #004080;
-      font-weight: 600;
-      letter-spacing: 1px;
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
     }
 
-    @keyframes zoomIn {
-      from { transform: scale(0.5); opacity: 0; }
-      to { transform: scale(1); opacity: 1; }
-    }
-
-    @keyframes fadeOut {
-      to {
-        opacity: 0;
-        visibility: hidden;
-      }
-    }
-
-    /* --- LOGIN CARD --- */
     .card {
       background: white;
       padding: 30px;
@@ -72,12 +55,6 @@
       width: 100%;
       text-align: center;
       display: none; /* hidden until splash ends */
-      animation: fadeIn 0.8s ease forwards;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
     }
 
     h2 {
@@ -210,13 +187,12 @@
 </head>
 <body>
 
-<!-- SPLASH SCREEN -->
+<!-- Splash Screen -->
 <div id="splash">
   <img src="TBI-LOGO.png" alt="Logo" />
-  <h1>Aspire TBI</h1>
+  <h3>Loading...</h3>
 </div>
 
-<!-- LOGIN CARD -->
 <div class="card" id="loginCard">
   <h2><i class="fas fa-sign-in-alt"></i> Login</h2>
 
@@ -260,7 +236,7 @@
   <div class="error" id="errorMsg"></div>
 </div>
 
-<!-- Forgot Modal -->
+<!-- Modal -->
 <div id="forgotModal">
   <div class="modal-content">
     <h3>Forgot Password</h3>
@@ -288,15 +264,23 @@
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app);
 
-  // --- Splash control ---
-  window.addEventListener('load', () => {
+  // Splash Screen
+  window.addEventListener("load", () => {
+    const splash = document.getElementById("splash");
     setTimeout(() => {
-      document.getElementById('splash').style.display = 'none';
-      document.getElementById('loginCard').style.display = 'block';
-    }, 3000); // 3 seconds
+      splash.style.opacity = "0";
+      setTimeout(() => {
+        splash.style.display = "none";
+        document.getElementById("loginCard").style.display = "block";
+      }, 800);
+    }, 3000);
   });
 
-  // --- Tabs + Login logic ---
+  // Persistent Login Check
+  if (localStorage.getItem("user")) {
+    window.location.href = "index.html";
+  }
+
   window.toggleTab = function(tab) {
     document.getElementById('tab-username').classList.toggle('active', tab === 'username');
     document.getElementById('tab-mpin').classList.toggle('active', tab === 'mpin');
@@ -325,19 +309,22 @@
           snapshot.forEach(childSnap => {
             const data = childSnap.val();
             if (data.mpin === mpinInput) {
+              localStorage.setItem("user", JSON.stringify({ username: childSnap.key, name: data.name }));
               window.location.href = 'index.html';
               found = true;
             }
           });
           if (!found) errorDiv.textContent = "Invalid M-PIN.";
+        } else {
+          errorDiv.textContent = "No users found.";
         }
       } catch (e) {
         errorDiv.textContent = "Login failed: " + e.message;
       }
+
     } else {
       const username = document.getElementById('username').value.trim();
       const password = document.getElementById('password').value.trim();
-
       if (!username || !password) {
         errorDiv.textContent = "Please fill in all fields.";
         return;
@@ -349,6 +336,7 @@
         if (snapshot.exists()) {
           const data = snapshot.val();
           if (data.password === password) {
+            localStorage.setItem("user", JSON.stringify({ username, name: data.name }));
             window.location.href = 'index.html';
           } else {
             errorDiv.textContent = "Incorrect password.";
@@ -362,32 +350,22 @@
     }
   }
 
-  window.showModal = () => {
-    document.getElementById('forgotModal').style.display = 'flex';
-    document.getElementById('resetMsg').textContent = '';
-    document.getElementById('resetUsername').value = '';
-  };
-
-  window.closeModal = () => {
-    document.getElementById('forgotModal').style.display = 'none';
-  };
+  window.showModal = () => document.getElementById('forgotModal').style.display = 'flex';
+  window.closeModal = () => document.getElementById('forgotModal').style.display = 'none';
 
   window.resetPassword = async () => {
     const username = document.getElementById('resetUsername').value.trim();
     const msg = document.getElementById('resetMsg');
-
     if (!username) {
       msg.textContent = "Please enter your username.";
       msg.style.color = "red";
       return;
     }
-
     try {
       const userRef = ref(db, `users/${username}`);
       const snapshot = await get(userRef);
       if (snapshot.exists()) {
-        const data = snapshot.val();
-        msg.textContent = `Password: ${data.password}`;
+        msg.textContent = `Password: ${snapshot.val().password}`;
         msg.style.color = "green";
       } else {
         msg.textContent = "Username not found.";
@@ -399,6 +377,5 @@
     }
   };
 </script>
-
 </body>
 </html>
