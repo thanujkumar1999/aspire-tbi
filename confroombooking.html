@@ -17,8 +17,7 @@
     }
     h2 { text-align: center; margin-bottom: 20px; font-size: 1.5rem; }
     .form-group { margin-bottom: 15px; }
-    .form-group input,
-    .form-group select {
+    .form-group input, .form-group select {
       width: 100%;
       padding: 12px;
       border-radius: 10px;
@@ -37,9 +36,7 @@
       cursor: pointer;
       margin-top: 10px;
     }
-    button:hover {
-      background: #005f46;
-    }
+    button:hover { background: #005f46; }
     #bookingIdDisplay {
       font-weight: bold;
       margin-top: 15px;
@@ -47,12 +44,13 @@
       color: #333;
     }
     #customTimeContainer { display: none; }
-    @media (max-width: 480px) { .app-container { padding: 15px; } }
+    option[disabled] { color: #aaa; background: #f8d7da; }
   </style>
 </head>
 <body>
   <div class="app-container">
     <h2>Conference Room Booking</h2>
+
     <div class="form-group">
       <select id="room" required>
         <option value="">-- Select Room --</option>
@@ -62,26 +60,22 @@
         <option value="GANGA">GANGA-NETWORK FACILITY</option>
       </select>
     </div>
-    <div class="form-group">
-      <input type="text" id="Startup" placeholder="Startup Name" required />
-    </div>
-    <div class="form-group">
-      <input type="text" id="Employee" placeholder="Employee Name" required />
-    </div>
-    <div class="form-group">
-      <input type="text" id="contact" placeholder="Contact Number" required />
-    </div>
-    <div class="form-group">
-      <input type="date" id="date" required />
-    </div>
+
+    <div class="form-group"><input type="text" id="Startup" placeholder="Startup Name" required /></div>
+    <div class="form-group"><input type="text" id="Employee" placeholder="Employee Name" required /></div>
+    <div class="form-group"><input type="text" id="contact" placeholder="Contact Number" required /></div>
+    <div class="form-group"><input type="date" id="date" required /></div>
+
     <div class="form-group">
       <select id="slot">
         <option value="">-- Select Slot --</option>
       </select>
     </div>
+
     <div class="form-group" id="customTimeContainer">
       <input type="text" id="customTime" placeholder="Enter custom time (HH:MM AM/PM - HH:MM AM/PM)" />
     </div>
+
     <div class="form-group">
       <select id="purpose" required>
         <option value="">-- Select Purpose --</option>
@@ -92,6 +86,7 @@
         <option value="Other">Other</option>
       </select>
     </div>
+
     <button id="bookRoomBtn">Book Room</button>
     <div id="bookingIdDisplay"></div>
   </div>
@@ -125,10 +120,9 @@
 
     const dateInput = document.getElementById("date");
     const slotSelect = document.getElementById("slot");
+    const roomSelect = document.getElementById("room");
     const customTimeContainer = document.getElementById("customTimeContainer");
-    const bookRoomBtn = document.getElementById("bookRoomBtn");
 
-    // Restrict date from today to 3 days ahead
     const today = new Date();
     const maxDate = new Date();
     maxDate.setDate(today.getDate() + 3);
@@ -139,53 +133,13 @@
       customTimeContainer.style.display = (value === "custom") ? "block" : "none";
     }
 
-    function updateSlotOptions() {
-      slotSelect.innerHTML = '<option value="">-- Select Slot --</option>';
-      const selDate = dateInput.value;
-      if (!selDate) return;
-
-      const selectedDate = new Date(selDate);
-      const now = new Date();
-
-      const available = timeSlots.filter(slot => {
-        if (slot === "custom") return true;
-        if (selectedDate.toDateString() !== now.toDateString()) return true;
-
-        const hour = parseInt(slot.split(":")[0]);
-        const isPM = slot.includes("PM");
-        let slotHour24 = hour % 12 + (isPM ? 12 : 0);
-        const slotStart = new Date(selectedDate);
-        slotStart.setHours(slotHour24, 0, 0, 0);
-        return slotStart > now;
-      });
-
-      available.forEach(slot => {
-        const opt = document.createElement("option");
-        opt.value = slot;
-        opt.textContent = slot;
-        slotSelect.appendChild(opt);
-      });
-
-      toggleCustomTime("");
-    }
-
-    function generateBookingId(room) {
-      const ts = new Date().toISOString().replace(/[-:T.]/g, "").slice(0, 14);
-      return `CR_${room}_${ts}`;
-    }
-
-    function isValidTimeRange(str) {
-      const regex = /^([0]?[1-9]|1[0-2]):[0-5][0-9]\s?(AM|PM)\s?-\s?([0]?[1-9]|1[0-2]):[0-5][0-9]\s?(AM|PM)$/i;
-      return regex.test(str.trim());
-    }
-
     function normalizeSlot(str) {
       return str.replace(/to/gi, "-").replace(/\s+/g, " ").trim();
     }
 
     function toMinutes(timeStr) {
       const [time, modifier] = timeStr.split(" ");
-      let [hours, minutes] = time.split(":")[0].split(":").map(Number);
+      let [hours, minutes] = time.split(":").map(Number);
       if (modifier === "PM" && hours !== 12) hours += 12;
       if (modifier === "AM" && hours === 12) hours = 0;
       return hours * 60 + (minutes || 0);
@@ -201,63 +155,78 @@
       } catch { return false; }
     }
 
-    async function isSlotAvailable(room, date, slot) {
+    async function getBookedSlots(room, date) {
+      if (!room || !date) return [];
       const q = query(collection(db, "conference_bookings"), where("room", "==", room), where("date", "==", date));
       const snapshot = await getDocs(q);
-      for (const doc of snapshot.docs) {
-        const existingSlot = doc.data().slot;
-        if (isOverlap(existingSlot, slot)) return false;
-      }
-      return true;
+      return snapshot.docs.map(doc => doc.data().slot);
+    }
+
+    async function updateSlotOptions() {
+      slotSelect.innerHTML = '<option value="">-- Select Slot --</option>';
+      const selDate = dateInput.value;
+      const room = roomSelect.value;
+      if (!selDate || !room) return;
+
+      const bookedSlots = await getBookedSlots(room, selDate);
+
+      timeSlots.forEach(slot => {
+        const opt = document.createElement("option");
+        opt.value = slot;
+        if (slot === "custom") {
+          opt.textContent = "Custom Time";
+        } else {
+          const isFull = bookedSlots.some(b => isOverlap(b, slot));
+          opt.textContent = isFull ? `${slot} (Full)` : slot;
+          if (isFull) opt.disabled = true;
+        }
+        slotSelect.appendChild(opt);
+      });
+    }
+
+    async function isSlotAvailable(room, date, slot) {
+      const bookedSlots = await getBookedSlots(room, date);
+      return !bookedSlots.some(b => isOverlap(b, slot));
     }
 
     async function bookRoom() {
-      const room = document.getElementById("room").value;
+      const room = roomSelect.value;
       const startup = document.getElementById("Startup").value.trim();
       const employee = document.getElementById("Employee").value.trim();
       const contact = document.getElementById("contact").value.trim();
       const date = document.getElementById("date").value;
-      let slot = document.getElementById("slot").value;
+      let slot = slotSelect.value;
       const customTime = document.getElementById("customTime").value.trim();
       const purpose = document.getElementById("purpose").value;
-
-      if (slot === "custom") {
-        if (!customTime) {
-          alert("Please enter a custom time range.");
-          return;
-        }
-        if (!isValidTimeRange(customTime)) {
-          alert("Invalid custom time format. Use HH:MM AM/PM - HH:MM AM/PM.");
-          return;
-        }
-        slot = customTime;
-      }
 
       if (!room || !startup || !employee || !contact || !date || !slot || !purpose) {
         alert("Please fill all fields.");
         return;
       }
 
+      if (slot === "custom") {
+        if (!customTime) return alert("Please enter custom time.");
+        slot = normalizeSlot(customTime);
+      }
+
       if (!(await isSlotAvailable(room, date, slot))) {
-        alert("⚠️ This room is already booked for the selected time slot.");
+        alert("⚠️ This slot is already booked.");
         return;
       }
 
-      const bookingId = generateBookingId(room);
-      document.getElementById("bookingIdDisplay").textContent = `Booking ID: ${bookingId}`;
+      const bookingId = `CR_${room}_${Date.now()}`;
+      await addDoc(collection(db, "conference_bookings"), {
+        room, startup, employee, contact, date, slot, purpose, bookingId, timestamp: serverTimestamp()
+      });
 
-      try {
-        await addDoc(collection(db, "conference_bookings"), {
-          room, startup, employee, contact, date, slot, purpose, bookingId, timestamp: serverTimestamp()
-        });
-      } catch (err) {
-        console.error("Error saving booking:", err);
-      }
+      document.getElementById("bookingIdDisplay").textContent = `✅ Booking Successful! ID: ${bookingId}`;
+      await updateSlotOptions();
     }
 
     dateInput.addEventListener("change", updateSlotOptions);
+    roomSelect.addEventListener("change", updateSlotOptions);
     slotSelect.addEventListener("change", e => toggleCustomTime(e.target.value));
-    bookRoomBtn.addEventListener("click", bookRoom);
+    document.getElementById("bookRoomBtn").addEventListener("click", bookRoom);
   </script>
 </body>
 </html>

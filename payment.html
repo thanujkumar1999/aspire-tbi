@@ -2,9 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Payment - Aspire-TBI</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
   <style>
     * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
     body { margin: 0; padding: 20px; background: #f0f4f8; color: #333; }
@@ -15,111 +15,126 @@
       padding: 25px;
       border-radius: 12px;
       box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+      text-align: center;
     }
-    h2 { text-align: center; margin-bottom: 25px; color: #004080; }
-    .form-group { margin-bottom: 18px; }
-    .form-group label { display: block; margin-bottom: 6px; font-weight: 500; }
-    select, input { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ccc; font-size: 16px; }
+    h2 { color: #004080; margin-bottom: 20px; }
+    .form-group { margin-bottom: 18px; text-align: left; }
+    label { display: block; margin-bottom: 6px; font-weight: 500; }
+    input, select {
+      width: 100%; padding: 12px; border-radius: 8px;
+      border: 1px solid #ccc; font-size: 16px;
+    }
     button {
-      width: 100%;
-      padding: 14px;
-      background: #004080;
-      color: #fff;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 16px;
-      transition: 0.2s;
+      width: 100%; padding: 14px; background: #004080; color: #fff;
+      border: none; border-radius: 8px; cursor: pointer; font-size: 16px;
     }
     button:hover { background: #002a60; }
-    #paymentInfo { margin-top: 20px; text-align: center; font-weight: bold; color: green; }
+    #qrContainer img {
+      max-width: 250px; margin-bottom: 15px;
+    }
+    #paymentInfo {
+      margin-top: 20px; color: green; font-weight: bold;
+    }
+    .note {
+      font-size: 14px; color: #555;
+    }
   </style>
 </head>
 <body>
-
   <div class="app-container">
-    <h2><i class="fas fa-credit-card"></i> Make a Payment</h2>
+    <h2><i class="fas fa-qrcode"></i> Pay via UPI QR</h2>
+
+    <div id="qrContainer">
+      <img src="your-qr-code.png" alt="Scan QR to Pay" />
+      <p class="note">Scan the QR code above using any UPI app (Google Pay, PhonePe, etc.)</p>
+    </div>
 
     <div class="form-group">
-      <label for="paymentType">Select Payment Type</label>
+      <label for="paymentType">Payment Type</label>
       <select id="paymentType">
-        <option value="">-- Select Payment Type --</option>
+        <option value="">-- Select --</option>
         <option value="license">License</option>
         <option value="startup">Startup</option>
-        <option value="other">Other Payments</option>
+        <option value="other">Other</option>
       </select>
     </div>
 
-    <div class="form-group" id="amountContainer" style="display:none;">
-      <label for="amount">Enter Amount (₹)</label>
+    <div class="form-group">
+      <label for="amount">Amount (₹)</label>
       <input type="number" id="amount" placeholder="Enter amount" min="1" />
     </div>
 
-    <div class="form-group" id="detailsContainer" style="display:none;">
+    <div class="form-group">
       <label for="details">Details / Notes</label>
-      <input type="text" id="details" placeholder="Any additional info" />
+      <input type="text" id="details" placeholder="Purpose of payment" />
     </div>
 
-    <button id="payBtn"><i class="fas fa-credit-card"></i> Pay Now</button>
+    <div class="form-group">
+      <label for="utr">UPI Reference Number / UTR (optional)</label>
+      <input type="text" id="utr" placeholder="e.g., 1234567890" />
+    </div>
+
+    <button id="confirmPaymentBtn"><i class="fas fa-check-circle"></i> I Have Paid</button>
 
     <div id="paymentInfo"></div>
   </div>
 
-  <!-- Razorpay Script -->
-  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.0.2/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.0.2/firebase-firestore.js"></script>
 
-  <script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.0.2/firebase-app.js";
+    import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.0.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAlZZ79I_UCaTwV4KHo67Rauv99epa_VHc",
+      authDomain: "aspire-tbi.firebaseapp.com",
+      projectId: "aspire-tbi",
+      storageBucket: "aspire-tbi.appspot.com",
+      messagingSenderId: "9906395381",
+      appId: "1:9906395381:web:546de5f0f6234703144dbc"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
     const paymentType = document.getElementById("paymentType");
-    const amountContainer = document.getElementById("amountContainer");
-    const detailsContainer = document.getElementById("detailsContainer");
-    const payBtn = document.getElementById("payBtn");
+    const amountInput = document.getElementById("amount");
+    const detailsInput = document.getElementById("details");
+    const utrInput = document.getElementById("utr");
+    const confirmBtn = document.getElementById("confirmPaymentBtn");
     const paymentInfo = document.getElementById("paymentInfo");
 
-    // Show/hide amount & details fields
-    paymentType.addEventListener("change", () => {
-      if(paymentType.value) {
-        amountContainer.style.display = "block";
-        detailsContainer.style.display = "block";
-      } else {
-        amountContainer.style.display = "none";
-        detailsContainer.style.display = "none";
+    confirmBtn.addEventListener("click", async () => {
+      const type = paymentType.value;
+      const amount = amountInput.value;
+      const details = detailsInput.value;
+      const utr = utrInput.value;
+
+      if (!type) return alert("Please select a payment type.");
+      if (!amount || amount <= 0) return alert("Please enter a valid amount.");
+
+      try {
+        await addDoc(collection(db, "payments"), {
+          paymentType: type,
+          amount: Number(amount),
+          details: details || 'N/A',
+          utr: utr || 'N/A',
+          timestamp: serverTimestamp(),
+          status: "Pending Verification"
+        });
+
+        paymentInfo.innerHTML = `✅ Your payment has been recorded.<br>Please wait while we verify your transfer.`;
+        amountInput.value = "";
+        detailsInput.value = "";
+        utrInput.value = "";
+        paymentType.value = "";
+      } catch (err) {
+        console.error("Error saving payment: ", err);
+        paymentInfo.innerHTML = `❌ Error saving payment info. Try again.`;
       }
     });
-
-    payBtn.addEventListener("click", () => {
-      const type = paymentType.value;
-      const amount = document.getElementById("amount").value;
-      const details = document.getElementById("details").value;
-
-      if(!type) return alert("Please select a payment type.");
-      if(!amount || amount <= 0) return alert("Please enter a valid amount.");
-
-      // Razorpay payment options
-      const options = {
-        key: "YOUR_RAZORPAY_KEY_ID", // Replace with your Razorpay Key ID
-        amount: amount * 100, // Amount in paise
-        currency: "INR",
-        name: "Aspire-TBI",
-        description: `Payment for ${type}`,
-        image: "https://aspire-tbi.uohyd.ac.in/logo.png", // optional logo
-        handler: function (response){
-          // Payment successful
-          paymentInfo.innerHTML = `✅ Payment Successful!<br>Payment ID: <b>${response.razorpay_payment_id}</b><br>Type: <b>${type}</b><br>Amount: ₹${amount}<br>Details: ${details || 'N/A'}`;
-        },
-        prefill: {
-          name: "User Name",
-          email: "user@example.com",
-          contact: ""
-        },
-        theme: {
-          color: "#004080"
-        }
-      };
-
-      const rzp = new Razorpay(options);
-      rzp.open();
-    });
   </script>
-
 </body>
 </html>

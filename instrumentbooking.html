@@ -83,186 +83,198 @@
   </div>
 
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
-    import { getFirestore, collection, addDoc, query, where, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
+import { 
+  getFirestore, collection, addDoc, query, where, getDocs, serverTimestamp 
+} from "https://www.gstatic.com/firebasejs/10.5.2/firebase-firestore.js";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyAlZZ79I_UCaTwV4KHo67Rauv99epa_VHc",
-      authDomain: "aspire-tbi.firebaseapp.com",
-      projectId: "aspire-tbi",
-      storageBucket: "aspire-tbi.appspot.com",
-      messagingSenderId: "9906395381",
-      appId: "1:9906395381:web:546de5f0f6234703144dbc"
-    };
+const firebaseConfig = {
+  apiKey: "AIzaSyAlZZ79I_UCaTwV4KHo67Rauv99epa_VHc",
+  authDomain: "aspire-tbi.firebaseapp.com",
+  projectId: "aspire-tbi",
+  storageBucket: "aspire-tbi.appspot.com",
+  messagingSenderId: "9906395381",
+  appId: "1:9906395381:web:546de5f0f6234703144dbc"
+};
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-    const timeSlots = [
-      "09:00 AM - 10:00 AM",
-      "10:00 AM - 11:00 AM",
-      "11:00 AM - 12:00 PM",
-      "12:00 PM - 01:00 PM",
-      "02:00 PM - 03:00 PM",
-      "03:00 PM - 04:00 PM",
-      "04:00 PM - 05:00 PM",
-      "custom"
-    ];
+const timeSlots = [
+  "09:00 AM - 10:00 AM",
+  "10:00 AM - 11:00 AM",
+  "11:00 AM - 12:00 PM",
+  "12:00 PM - 01:00 PM",
+  "02:00 PM - 03:00 PM",
+  "03:00 PM - 04:00 PM",
+  "04:00 PM - 05:00 PM",
+  "custom"
+];
 
-    const slotSelect = document.getElementById("slot");
-    const customTimeContainer = document.getElementById("customTimeContainer");
+const slotSelect = document.getElementById("slot");
+const customTimeContainer = document.getElementById("customTimeContainer");
+const instrumentSelect = document.getElementById("instrument");
+const startDateInput = document.getElementById("startDate");
 
-    function normalizeSlot(str) {
-      return str.replace(/to/gi, "-").replace(/\s+/g, " ").trim();
-    }
+function normalizeSlot(str) {
+  return str.replace(/to/gi, "-").replace(/\s+/g, " ").trim();
+}
 
-    function toMinutes(timeStr) {
-      if (!timeStr) return 0;
-      timeStr = timeStr.trim().toUpperCase();
-      if (!timeStr.includes("AM") && !timeStr.includes("PM")) {
-        const [hours, minutes] = timeStr.split(":").map(Number);
-        return hours * 60 + (minutes || 0);
-      }
-      const [time, modifier] = timeStr.split(" ");
-      let [hours, minutes] = time.split(":").map(Number);
-      if (modifier === "PM" && hours !== 12) hours += 12;
-      if (modifier === "AM" && hours === 12) hours = 0;
-      return hours * 60 + (minutes || 0);
-    }
+function toMinutes(timeStr) {
+  if (!timeStr) return 0;
+  timeStr = timeStr.trim().toUpperCase();
+  if (!timeStr.includes("AM") && !timeStr.includes("PM")) {
+    const [hours, minutes] = timeStr.split(":").map(Number);
+    return hours * 60 + (minutes || 0);
+  }
+  const [time, modifier] = timeStr.split(" ");
+  let [hours, minutes] = time.split(":").map(Number);
+  if (modifier === "PM" && hours !== 12) hours += 12;
+  if (modifier === "AM" && hours === 12) hours = 0;
+  return hours * 60 + (minutes || 0);
+}
 
-    function isOverlap(slot1, slot2) {
-      try {
-        slot1 = normalizeSlot(slot1);
-        slot2 = normalizeSlot(slot2);
-        const [s1, e1] = slot1.split("-").map(s => s.trim());
-        const [s2, e2] = slot2.split("-").map(s => s.trim());
-        return toMinutes(s1) < toMinutes(e2) && toMinutes(s2) < toMinutes(e1);
-      } catch {
-        return false;
-      }
-    }
+function isOverlap(slot1, slot2) {
+  try {
+    slot1 = normalizeSlot(slot1);
+    slot2 = normalizeSlot(slot2);
+    const [s1, e1] = slot1.split("-").map(s => s.trim());
+    const [s2, e2] = slot2.split("-").map(s => s.trim());
+    return toMinutes(s1) < toMinutes(e2) && toMinutes(s2) < toMinutes(e1);
+  } catch {
+    return false;
+  }
+}
 
-    function validateCustomSlot(slot) {
-      const regex = /^([0]?[1-9]|1[0-2]):([0-5][0-9])\s?(AM|PM)\s?-\s?([0]?[1-9]|1[0-2]):([0-5][0-9])\s?(AM|PM)$/i;
-      if (!regex.test(slot.trim())) return false;
-      const [start, end] = slot.split("-").map(s => s.trim());
-      return toMinutes(end) > toMinutes(start);
-    }
+async function fetchBookedSlots(instrument, date) {
+  const q = query(collection(db, "bookings"), where("instrument", "==", instrument), where("date", "==", date));
+  const snap = await getDocs(q);
+  const bookedSlots = [];
+  snap.forEach(doc => bookedSlots.push(normalizeSlot(doc.data().slot)));
+  return bookedSlots;
+}
 
-    async function checkSlotAvailability(instrument, date, slot) {
-      const q = query(collection(db, "bookings"), where("instrument", "==", instrument), where("date", "==", date));
-      const snap = await getDocs(q);
-      for (const doc of snap.docs) {
-        const existingSlot = normalizeSlot(doc.data().slot);
-        if (isOverlap(existingSlot, slot)) {
-          return false;
-        }
-      }
-      return true;
-    }
+async function updateSlotOptions() {
+  slotSelect.innerHTML = '<option value="">-- Select Slot --</option>';
+  const instrument = instrumentSelect.value.trim();
+  const date = startDateInput.value;
 
-    async function bookInstrument() {
-      const instrument = document.getElementById("instrument").value.trim();
-      const name = document.getElementById("name").value.trim();
-      const username = document.getElementById("username").value.trim();
-      const employeeid = document.getElementById("employeeid").value.trim();
-      const number = document.getElementById("number").value.trim();
-      let slot = document.getElementById("slot").value;
-      const customTime = document.getElementById("customTime").value.trim();
-      const startDate = new Date(document.getElementById("startDate").value);
-      const endDate = new Date(document.getElementById("endDate").value);
-
-      const today = new Date(); today.setHours(0,0,0,0);
-      const maxDate = new Date(today); maxDate.setDate(today.getDate() + 7);
-
-      if (startDate < today || endDate < today || startDate > maxDate || endDate > maxDate) {
-        return alert("⚠️ You can only book from today up to the next 7 days.");
-      }
-
-      if (slot === "custom") {
-        if (!customTime) return alert("Please enter custom time range.");
-        if (!validateCustomSlot(customTime)) {
-          return alert("⚠️ Custom time must be in format: HH:MM AM/PM - HH:MM AM/PM and end time > start time");
-        }
-        slot = normalizeSlot(customTime);
-      }
-
-      if (!instrument || !name || !username || !employeeid || !number || !slot || isNaN(startDate) || isNaN(endDate))
-        return alert("Please fill all fields.");
-
-      const diffDays = Math.floor((endDate - startDate) / (1000*60*60*24)) + 1;
-      if (diffDays < 1 || diffDays > 2) return alert("You can only book up to 2 days.");
-
-      const bookingIds = [];
-
-      for (let i = 0; i < diffDays; i++) {
-        const bookingDate = new Date(startDate);
-        bookingDate.setDate(startDate.getDate() + i);
-        const formattedDate = bookingDate.toISOString().split("T")[0];
-
-        const available = await checkSlotAvailability(instrument, formattedDate, slot);
-        if (!available) {
-          alert(`⚠️ This time slot is already booked`);
-          return;
-        }
-
-        const bookingId = `BK_${instrument}_${formattedDate}_${Date.now()}`;
-        bookingIds.push(bookingId);
-
-        await addDoc(collection(db, "bookings"), {
-          instrument, name, username, employeeid, number,
-          date: formattedDate, slot, bookingId, timestamp: serverTimestamp()
-        });
-      }
-
-      document.getElementById("bookingIdDisplay").innerText = 
-        `✅ Booking Successful! IDs: ${bookingIds.join(", ")}`;
-    }
-
-    function updateSlotOptions() {
-      slotSelect.innerHTML = '<option value="">-- Select Slot --</option>';
-      timeSlots.forEach(slot => {
-        const option = document.createElement("option");
-        option.value = slot;
-        option.textContent = slot;
-        slotSelect.appendChild(option);
-      });
-    }
-
-    slotSelect.addEventListener("change", e => {
-      customTimeContainer.style.display = e.target.value === "custom" ? "block" : "none";
+  // No need to check if nothing is selected
+  if (!instrument || !date) {
+    timeSlots.forEach(slot => {
+      const opt = document.createElement("option");
+      opt.value = slot;
+      opt.textContent = slot;
+      slotSelect.appendChild(opt);
     });
+    return;
+  }
 
-    document.getElementById("bookBtn").addEventListener("click", bookInstrument);
+  const bookedSlots = await fetchBookedSlots(instrument, date);
 
-    // --- Set active dates in calendar ---
-    function setActiveDates() {
-      const startDateInput = document.getElementById("startDate");
-      const endDateInput = document.getElementById("endDate");
+  timeSlots.forEach(slot => {
+    const option = document.createElement("option");
+    option.value = slot;
 
-      const today = new Date(); today.setHours(0,0,0,0);
-      const maxDate = new Date(today); maxDate.setDate(today.getDate() + 7);
-      const formatDate = date => date.toISOString().split("T")[0];
+    // Disable if overlaps
+    const isFull = bookedSlots.some(b => isOverlap(b, slot));
+    if (isFull) {
+      option.disabled = true;
+      option.textContent = `${slot} (Full)`;
+      option.style.color = "red";
+    } else {
+      option.textContent = slot;
+    }
+    slotSelect.appendChild(option);
+  });
+}
 
-      startDateInput.min = formatDate(today);
-      startDateInput.max = formatDate(maxDate);
-      endDateInput.min = formatDate(today);
-      endDateInput.max = formatDate(maxDate);
+slotSelect.addEventListener("change", e => {
+  customTimeContainer.style.display = e.target.value === "custom" ? "block" : "none";
+});
 
-      startDateInput.addEventListener("change", () => {
-        const start = new Date(startDateInput.value);
-        const maxEnd = new Date(start);
-        maxEnd.setDate(start.getDate() + 1);
-        endDateInput.min = formatDate(start);
-        endDateInput.max = formatDate(maxEnd > maxDate ? maxDate : maxEnd);
-        if (new Date(endDateInput.value) < start) {
-          endDateInput.value = formatDate(start);
-        }
-      });
+instrumentSelect.addEventListener("change", updateSlotOptions);
+startDateInput.addEventListener("change", updateSlotOptions);
+
+document.getElementById("bookBtn").addEventListener("click", bookInstrument);
+
+async function bookInstrument() {
+  const instrument = document.getElementById("instrument").value.trim();
+  const name = document.getElementById("name").value.trim();
+  const username = document.getElementById("username").value.trim();
+  const employeeid = document.getElementById("employeeid").value.trim();
+  const number = document.getElementById("number").value.trim();
+  let slot = document.getElementById("slot").value;
+  const customTime = document.getElementById("customTime").value.trim();
+  const startDate = new Date(document.getElementById("startDate").value);
+  const endDate = new Date(document.getElementById("endDate").value);
+
+  if (!instrument || !name || !username || !employeeid || !number || !slot || isNaN(startDate) || isNaN(endDate))
+    return alert("Please fill all fields.");
+
+  if (slot === "custom") {
+    if (!customTime) return alert("Please enter custom time range.");
+    slot = normalizeSlot(customTime);
+  }
+
+  const diffDays = Math.floor((endDate - startDate) / (1000*60*60*24)) + 1;
+  if (diffDays < 1 || diffDays > 2) return alert("You can only book up to 2 days.");
+
+  const bookingIds = [];
+  for (let i = 0; i < diffDays; i++) {
+    const bookingDate = new Date(startDate);
+    bookingDate.setDate(startDate.getDate() + i);
+    const formattedDate = bookingDate.toISOString().split("T")[0];
+    const bookedSlots = await fetchBookedSlots(instrument, formattedDate);
+
+    const conflict = bookedSlots.some(b => isOverlap(b, slot));
+    if (conflict) {
+      alert(`⚠️ Slot already booked for ${formattedDate}`);
+      return;
     }
 
-    updateSlotOptions();
-    setActiveDates();
-  </script>
+    const bookingId = `BK_${instrument}_${formattedDate}_${Date.now()}`;
+    bookingIds.push(bookingId);
+
+    await addDoc(collection(db, "bookings"), {
+      instrument, name, username, employeeid, number,
+      date: formattedDate, slot, bookingId, timestamp: serverTimestamp()
+    });
+  }
+
+  document.getElementById("bookingIdDisplay").innerText = 
+    `✅ Booking Successful! IDs: ${bookingIds.join(", ")}`;
+
+  // Refresh slot list
+  updateSlotOptions();
+}
+
+function setActiveDates() {
+  const today = new Date(); today.setHours(0,0,0,0);
+  const maxDate = new Date(today); maxDate.setDate(today.getDate() + 7);
+  const formatDate = date => date.toISOString().split("T")[0];
+  const endDateInput = document.getElementById("endDate");
+
+  startDateInput.min = formatDate(today);
+  startDateInput.max = formatDate(maxDate);
+  endDateInput.min = formatDate(today);
+  endDateInput.max = formatDate(maxDate);
+
+  startDateInput.addEventListener("change", () => {
+    const start = new Date(startDateInput.value);
+    const maxEnd = new Date(start);
+    maxEnd.setDate(start.getDate() + 1);
+    endDateInput.min = formatDate(start);
+    endDateInput.max = formatDate(maxEnd > maxDate ? maxDate : maxEnd);
+    if (new Date(endDateInput.value) < start) {
+      endDateInput.value = formatDate(start);
+    }
+  });
+}
+
+setActiveDates();
+updateSlotOptions();
+</script>
+
 </body>
 </html>
